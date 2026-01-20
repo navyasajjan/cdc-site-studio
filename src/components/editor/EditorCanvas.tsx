@@ -37,16 +37,35 @@ interface SectionProps {
   content: any;
   sectionId: string;
   onContentUpdate: (content: Record<string, any>) => void;
+  siteSettings?: {
+    logo: string;
+    logoPosition: 'left' | 'center' | 'right';
+    logoSize: 'small' | 'medium' | 'large';
+    showLogoInHero: boolean;
+    showLogoInHeader: boolean;
+  };
 }
 
 export function EditorCanvas() {
-  const { sections, state, setSelectedSection, updateSectionContent } = useEditor();
+  const { sections, state, siteSettings, setSelectedSection, updateSectionContent } = useEditor();
 
   const previewClasses = cn(
     'transition-all duration-300 bg-white mx-auto shadow-elevated rounded-lg overflow-hidden',
     state.previewMode === 'desktop' && 'w-full max-w-[1200px]',
     state.previewMode === 'tablet' && 'w-[768px]',
     state.previewMode === 'mobile' && 'w-[375px]'
+  );
+
+  const logoSizeClass = cn(
+    siteSettings.logoSize === 'small' && 'h-8',
+    siteSettings.logoSize === 'medium' && 'h-12',
+    siteSettings.logoSize === 'large' && 'h-16'
+  );
+
+  const logoPositionClass = cn(
+    siteSettings.logoPosition === 'left' && 'justify-start',
+    siteSettings.logoPosition === 'center' && 'justify-center',
+    siteSettings.logoPosition === 'right' && 'justify-end'
   );
 
   const visibleSections = sections.filter(s => s.visible).sort((a, b) => a.order - b.order);
@@ -61,6 +80,23 @@ export function EditorCanvas() {
       style={{ transform: `scale(${state.zoom / 100})`, transformOrigin: 'top center' }}
     >
       <div className={previewClasses}>
+        {/* Site Header with Logo */}
+        {siteSettings.showLogoInHeader && siteSettings.logo && (
+          <header className={cn(
+            'px-4 sm:px-6 py-3 border-b border-border flex items-center bg-white',
+            logoPositionClass
+          )}>
+            <div className="flex items-center gap-2">
+              <img 
+                src={siteSettings.logo} 
+                alt="Site logo" 
+                className={cn('object-contain', logoSizeClass)}
+              />
+              <span className="font-semibold text-foreground hidden sm:inline">{cdcData.name}</span>
+            </div>
+          </header>
+        )}
+        
         {visibleSections.map((section) => (
           <div
             key={section.id}
@@ -88,7 +124,7 @@ export function EditorCanvas() {
             </div>
 
             {/* Render Section Content */}
-            {section.type === 'hero' && <HeroSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
+            {section.type === 'hero' && <HeroSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} siteSettings={siteSettings} />}
             {section.type === 'about' && <AboutSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
             {section.type === 'services' && <ServicesSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
             {section.type === 'therapists' && <TherapistsSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
@@ -107,7 +143,13 @@ export function EditorCanvas() {
   );
 }
 
-function HeroSection({ content, onContentUpdate }: SectionProps) {
+function HeroSection({ content, onContentUpdate, siteSettings }: SectionProps) {
+  const logoSizeClass = cn(
+    siteSettings?.logoSize === 'small' && 'h-10 sm:h-12',
+    siteSettings?.logoSize === 'medium' && 'h-14 sm:h-16',
+    siteSettings?.logoSize === 'large' && 'h-18 sm:h-20'
+  );
+
   return (
     <section
       className="relative min-h-[500px] flex items-center justify-center bg-cover bg-center"
@@ -118,6 +160,16 @@ function HeroSection({ content, onContentUpdate }: SectionProps) {
       }}
     >
       <div className="container mx-auto px-6 text-center text-white">
+        {/* Logo in Hero */}
+        {siteSettings?.showLogoInHero && siteSettings.logo && (
+          <div className="mb-6">
+            <img 
+              src={siteSettings.logo} 
+              alt="Site logo" 
+              className={cn('object-contain mx-auto', logoSizeClass)}
+            />
+          </div>
+        )}
         <EditableText
           value={content.headline}
           onChange={(value) => onContentUpdate({ headline: value })}
