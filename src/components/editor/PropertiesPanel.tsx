@@ -26,9 +26,20 @@ import {
   AlignCenter,
   AlignRight,
 } from 'lucide-react';
+import { SiteSection, SectionStyle } from '@/types/editor';
+
+const defaultStyle: SectionStyle = {
+  paddingTop: 64,
+  paddingBottom: 64,
+  paddingLeft: 24,
+  paddingRight: 24,
+  textAlign: 'center',
+  backgroundColor: 'transparent',
+  backgroundType: 'color',
+};
 
 export function PropertiesPanel() {
-  const { state, sections, updateSectionContent } = useEditor();
+  const { state, sections, updateSectionContent, updateSectionStyle } = useEditor();
   
   const selectedSection = sections.find(s => s.id === state.selectedSectionId);
 
@@ -95,7 +106,7 @@ export function PropertiesPanel() {
 
           {/* Style Tab */}
           <TabsContent value="style" className="m-0">
-            <StyleEditor />
+            <StyleEditor section={selectedSection} updateStyle={updateSectionStyle} />
           </TabsContent>
 
           {/* Settings Tab */}
@@ -302,13 +313,18 @@ function DefaultContentEditor({ section, updateContent }: { section: any; update
   );
 }
 
-function StyleEditor() {
+function StyleEditor({ section, updateStyle }: { section: SiteSection; updateStyle: (id: string, style: Partial<SectionStyle>) => void }) {
+  const style = section.style || defaultStyle;
+
   return (
     <div className="p-4 space-y-6">
       {/* Background */}
       <div className="space-y-3">
-        <Label className="text-xs font-medium">Background</Label>
-        <Select defaultValue="color">
+        <Label className="text-xs font-medium">Background Type</Label>
+        <Select 
+          value={style.backgroundType} 
+          onValueChange={(value: 'color' | 'gradient' | 'image') => updateStyle(section.id, { backgroundType: value })}
+        >
           <SelectTrigger className="text-sm">
             <SelectValue />
           </SelectTrigger>
@@ -319,10 +335,34 @@ function StyleEditor() {
           </SelectContent>
         </Select>
         <div className="flex gap-2">
-          <div className="w-8 h-8 rounded-md bg-background border border-input cursor-pointer" />
-          <div className="w-8 h-8 rounded-md bg-primary cursor-pointer" />
-          <div className="w-8 h-8 rounded-md bg-secondary cursor-pointer" />
-          <div className="w-8 h-8 rounded-md bg-muted cursor-pointer" />
+          <div 
+            className={cn(
+              "w-8 h-8 rounded-md bg-background border-2 cursor-pointer transition-all",
+              style.backgroundColor === 'transparent' ? 'border-primary' : 'border-input'
+            )}
+            onClick={() => updateStyle(section.id, { backgroundColor: 'transparent' })}
+          />
+          <div 
+            className={cn(
+              "w-8 h-8 rounded-md bg-primary cursor-pointer border-2 transition-all",
+              style.backgroundColor === 'primary' ? 'border-foreground' : 'border-transparent'
+            )}
+            onClick={() => updateStyle(section.id, { backgroundColor: 'primary' })}
+          />
+          <div 
+            className={cn(
+              "w-8 h-8 rounded-md bg-secondary cursor-pointer border-2 transition-all",
+              style.backgroundColor === 'secondary' ? 'border-foreground' : 'border-transparent'
+            )}
+            onClick={() => updateStyle(section.id, { backgroundColor: 'secondary' })}
+          />
+          <div 
+            className={cn(
+              "w-8 h-8 rounded-md bg-muted cursor-pointer border-2 transition-all",
+              style.backgroundColor === 'muted' ? 'border-foreground' : 'border-transparent'
+            )}
+            onClick={() => updateStyle(section.id, { backgroundColor: 'muted' })}
+          />
         </div>
       </div>
 
@@ -331,12 +371,52 @@ function StyleEditor() {
         <Label className="text-xs font-medium">Padding</Label>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <span className="text-[10px] text-muted-foreground">Top</span>
-            <Slider defaultValue={[64]} max={200} step={4} />
+            <div className="flex justify-between">
+              <span className="text-[10px] text-muted-foreground">Top</span>
+              <span className="text-[10px] text-muted-foreground">{style.paddingTop}px</span>
+            </div>
+            <Slider 
+              value={[style.paddingTop]} 
+              max={200} 
+              step={4} 
+              onValueChange={(value) => updateStyle(section.id, { paddingTop: value[0] })}
+            />
           </div>
           <div className="space-y-1.5">
-            <span className="text-[10px] text-muted-foreground">Bottom</span>
-            <Slider defaultValue={[64]} max={200} step={4} />
+            <div className="flex justify-between">
+              <span className="text-[10px] text-muted-foreground">Bottom</span>
+              <span className="text-[10px] text-muted-foreground">{style.paddingBottom}px</span>
+            </div>
+            <Slider 
+              value={[style.paddingBottom]} 
+              max={200} 
+              step={4} 
+              onValueChange={(value) => updateStyle(section.id, { paddingBottom: value[0] })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex justify-between">
+              <span className="text-[10px] text-muted-foreground">Left</span>
+              <span className="text-[10px] text-muted-foreground">{style.paddingLeft}px</span>
+            </div>
+            <Slider 
+              value={[style.paddingLeft]} 
+              max={100} 
+              step={4} 
+              onValueChange={(value) => updateStyle(section.id, { paddingLeft: value[0] })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex justify-between">
+              <span className="text-[10px] text-muted-foreground">Right</span>
+              <span className="text-[10px] text-muted-foreground">{style.paddingRight}px</span>
+            </div>
+            <Slider 
+              value={[style.paddingRight]} 
+              max={100} 
+              step={4} 
+              onValueChange={(value) => updateStyle(section.id, { paddingRight: value[0] })}
+            />
           </div>
         </div>
       </div>
@@ -345,13 +425,28 @@ function StyleEditor() {
       <div className="space-y-3">
         <Label className="text-xs font-medium">Text Alignment</Label>
         <div className="flex gap-1 p-1 bg-muted rounded-lg">
-          <Button variant="ghost" size="sm" className="flex-1">
+          <Button 
+            variant={style.textAlign === 'left' ? 'secondary' : 'ghost'} 
+            size="sm" 
+            className="flex-1"
+            onClick={() => updateStyle(section.id, { textAlign: 'left' })}
+          >
             <AlignLeft className="w-4 h-4" />
           </Button>
-          <Button variant="secondary" size="sm" className="flex-1">
+          <Button 
+            variant={style.textAlign === 'center' ? 'secondary' : 'ghost'} 
+            size="sm" 
+            className="flex-1"
+            onClick={() => updateStyle(section.id, { textAlign: 'center' })}
+          >
             <AlignCenter className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="flex-1">
+          <Button 
+            variant={style.textAlign === 'right' ? 'secondary' : 'ghost'} 
+            size="sm" 
+            className="flex-1"
+            onClick={() => updateStyle(section.id, { textAlign: 'right' })}
+          >
             <AlignRight className="w-4 h-4" />
           </Button>
         </div>

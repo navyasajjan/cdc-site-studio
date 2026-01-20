@@ -20,6 +20,7 @@ interface EditorContextType {
   setZoom: (zoom: number) => void;
   updateSection: (id: string, updates: Partial<SiteSection>) => void;
   updateSectionContent: (id: string, content: Record<string, any>) => void;
+  updateSectionStyle: (id: string, style: Partial<SiteSection['style']>) => void;
   updateSiteSettings: (settings: Partial<SiteSettings>) => void;
   reorderSections: (startIndex: number, endIndex: number) => void;
   toggleSectionVisibility: (id: string) => void;
@@ -94,6 +95,31 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     setSections(prev => {
       const newSections = prev.map(section =>
         section.id === id ? { ...section, content: { ...section.content, ...content } } : section
+      );
+      pushToHistory(newSections);
+      return newSections;
+    });
+    setState(prev => ({ ...prev, hasUnsavedChanges: true }));
+  }, [pushToHistory]);
+
+  const updateSectionStyle = useCallback((id: string, style: Partial<SiteSection['style']>) => {
+    setSections(prev => {
+      const newSections = prev.map(section =>
+        section.id === id ? { 
+          ...section, 
+          style: { 
+            ...(section.style || {
+              paddingTop: 64,
+              paddingBottom: 64,
+              paddingLeft: 24,
+              paddingRight: 24,
+              textAlign: 'center' as const,
+              backgroundColor: 'transparent',
+              backgroundType: 'color' as const,
+            }), 
+            ...style 
+          } 
+        } : section
       );
       pushToHistory(newSections);
       return newSections;
@@ -199,6 +225,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         setZoom,
         updateSection,
         updateSectionContent,
+        updateSectionStyle,
         updateSiteSettings,
         reorderSections,
         toggleSectionVisibility,

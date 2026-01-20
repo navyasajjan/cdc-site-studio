@@ -10,6 +10,17 @@ export interface User {
   avatar?: string;
 }
 
+export interface SectionStyle {
+  paddingTop: number;
+  paddingBottom: number;
+  paddingLeft: number;
+  paddingRight: number;
+  textAlign: 'left' | 'center' | 'right';
+  backgroundColor: string;
+  backgroundType: 'color' | 'gradient' | 'image';
+  backgroundImage?: string;
+}
+
 export interface SiteSection {
   id: string;
   type: SectionType;
@@ -18,6 +29,7 @@ export interface SiteSection {
   locked: boolean;
   order: number;
   content: Record<string, any>;
+  style?: SectionStyle;
 }
 
 export type SectionType = 
