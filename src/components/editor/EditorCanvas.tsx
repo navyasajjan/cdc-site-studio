@@ -37,6 +37,16 @@ interface SectionProps {
   content: any;
   sectionId: string;
   onContentUpdate: (content: Record<string, any>) => void;
+  style?: {
+    paddingTop: number;
+    paddingBottom: number;
+    paddingLeft: number;
+    paddingRight: number;
+    textAlign: 'left' | 'center' | 'right';
+    backgroundColor: string;
+    backgroundType: 'color' | 'gradient' | 'image';
+    backgroundImage?: string;
+  };
   siteSettings?: {
     logo: string;
     logoPosition: 'left' | 'center' | 'right';
@@ -45,6 +55,16 @@ interface SectionProps {
     showLogoInHeader: boolean;
   };
 }
+
+const defaultStyle = {
+  paddingTop: 64,
+  paddingBottom: 64,
+  paddingLeft: 24,
+  paddingRight: 24,
+  textAlign: 'center' as const,
+  backgroundColor: 'transparent',
+  backgroundType: 'color' as const,
+};
 
 export function EditorCanvas() {
   const { sections, state, siteSettings, setSelectedSection, updateSectionContent } = useEditor();
@@ -124,18 +144,18 @@ export function EditorCanvas() {
             </div>
 
             {/* Render Section Content */}
-            {section.type === 'hero' && <HeroSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} siteSettings={siteSettings} />}
-            {section.type === 'about' && <AboutSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
-            {section.type === 'services' && <ServicesSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
-            {section.type === 'therapists' && <TherapistsSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
-            {section.type === 'gallery' && <GallerySection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
-            {section.type === 'booking' && <BookingSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
-            {section.type === 'analytics' && <AnalyticsSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
-            {section.type === 'testimonials' && <TestimonialsSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
-            {section.type === 'pricing' && <PricingSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
-            {section.type === 'learning' && <LearningSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
-            {section.type === 'contact' && <ContactSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
-            {section.type === 'footer' && <FooterSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
+            {section.type === 'hero' && <HeroSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} siteSettings={siteSettings} />}
+            {section.type === 'about' && <AboutSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
+            {section.type === 'services' && <ServicesSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
+            {section.type === 'therapists' && <TherapistsSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
+            {section.type === 'gallery' && <GallerySection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
+            {section.type === 'booking' && <BookingSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
+            {section.type === 'analytics' && <AnalyticsSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
+            {section.type === 'testimonials' && <TestimonialsSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
+            {section.type === 'pricing' && <PricingSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
+            {section.type === 'learning' && <LearningSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
+            {section.type === 'contact' && <ContactSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
+            {section.type === 'footer' && <FooterSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
           </div>
         ))}
       </div>
@@ -143,30 +163,40 @@ export function EditorCanvas() {
   );
 }
 
-function HeroSection({ content, onContentUpdate, siteSettings }: SectionProps) {
+function HeroSection({ content, onContentUpdate, style = defaultStyle, siteSettings }: SectionProps) {
   const logoSizeClass = cn(
     siteSettings?.logoSize === 'small' && 'h-10 sm:h-12',
     siteSettings?.logoSize === 'medium' && 'h-14 sm:h-16',
     siteSettings?.logoSize === 'large' && 'h-18 sm:h-20'
   );
 
+  const textAlignClass = cn(
+    style.textAlign === 'left' && 'text-left items-start',
+    style.textAlign === 'center' && 'text-center items-center',
+    style.textAlign === 'right' && 'text-right items-end'
+  );
+
   return (
     <section
       className="relative min-h-[500px] flex items-center justify-center bg-cover bg-center"
       style={{
+        paddingTop: `${style.paddingTop}px`,
+        paddingBottom: `${style.paddingBottom}px`,
+        paddingLeft: `${style.paddingLeft}px`,
+        paddingRight: `${style.paddingRight}px`,
         backgroundImage: content.backgroundImage
           ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${content.backgroundImage})`
           : 'linear-gradient(135deg, hsl(174 58% 39%) 0%, hsl(174 58% 50%) 100%)',
       }}
     >
-      <div className="container mx-auto px-6 text-center text-white">
+      <div className={cn("container mx-auto px-6 text-white flex flex-col", textAlignClass)}>
         {/* Logo in Hero */}
         {siteSettings?.showLogoInHero && siteSettings.logo && (
           <div className="mb-6">
             <img 
               src={siteSettings.logo} 
               alt="Site logo" 
-              className={cn('object-contain mx-auto', logoSizeClass)}
+              className={cn('object-contain', logoSizeClass, style.textAlign === 'center' && 'mx-auto')}
             />
           </div>
         )}
@@ -182,11 +212,15 @@ function HeroSection({ content, onContentUpdate, siteSettings }: SectionProps) {
           value={content.subheadline}
           onChange={(value) => onContentUpdate({ subheadline: value })}
           as="p"
-          className="text-lg md:text-xl mb-8 max-w-2xl mx-auto opacity-90"
+          className="text-lg md:text-xl mb-8 max-w-2xl opacity-90"
           placeholder="Enter subheadline..."
           maxLength={200}
         />
-        <div className="flex flex-wrap items-center justify-center gap-4">
+        <div className={cn("flex flex-wrap gap-4", 
+          style.textAlign === 'left' && 'justify-start',
+          style.textAlign === 'center' && 'justify-center',
+          style.textAlign === 'right' && 'justify-end'
+        )}>
           {content.ctas?.map((cta: any, index: number) => (
             <Button
               key={index}
@@ -214,11 +248,32 @@ function HeroSection({ content, onContentUpdate, siteSettings }: SectionProps) {
   );
 }
 
-function AboutSection({ content, onContentUpdate }: SectionProps) {
+function AboutSection({ content, onContentUpdate, style = defaultStyle }: SectionProps) {
+  const textAlignClass = cn(
+    style.textAlign === 'left' && 'text-left',
+    style.textAlign === 'center' && 'text-center',
+    style.textAlign === 'right' && 'text-right'
+  );
+
+  const bgClass = cn(
+    style.backgroundColor === 'primary' && 'bg-primary text-primary-foreground',
+    style.backgroundColor === 'secondary' && 'bg-secondary',
+    style.backgroundColor === 'muted' && 'bg-muted',
+    style.backgroundColor === 'transparent' && 'bg-background'
+  );
+
   return (
-    <section className="py-16 px-6 bg-background">
+    <section 
+      className={cn("bg-background", bgClass)}
+      style={{
+        paddingTop: `${style.paddingTop}px`,
+        paddingBottom: `${style.paddingBottom}px`,
+        paddingLeft: `${style.paddingLeft}px`,
+        paddingRight: `${style.paddingRight}px`,
+      }}
+    >
       <div className="container mx-auto max-w-4xl">
-        <div className="text-center mb-12">
+        <div className={cn("mb-12", textAlignClass)}>
           <EditableText
             value="About Our Center"
             onChange={() => {}}
@@ -230,7 +285,7 @@ function AboutSection({ content, onContentUpdate }: SectionProps) {
             value={content.mission}
             onChange={(value) => onContentUpdate({ mission: value })}
             as="p"
-            className="text-muted-foreground max-w-2xl mx-auto"
+            className={cn("text-muted-foreground max-w-2xl", style.textAlign === 'center' && 'mx-auto')}
             placeholder="Enter mission statement..."
           />
         </div>
@@ -282,11 +337,32 @@ function AboutSection({ content, onContentUpdate }: SectionProps) {
   );
 }
 
-function ServicesSection({ content, onContentUpdate }: SectionProps) {
+function ServicesSection({ content, onContentUpdate, style = defaultStyle }: SectionProps) {
+  const textAlignClass = cn(
+    style.textAlign === 'left' && 'text-left',
+    style.textAlign === 'center' && 'text-center',
+    style.textAlign === 'right' && 'text-right'
+  );
+
+  const bgClass = cn(
+    style.backgroundColor === 'primary' && 'bg-primary text-primary-foreground',
+    style.backgroundColor === 'secondary' && 'bg-secondary',
+    style.backgroundColor === 'muted' && 'bg-muted',
+    style.backgroundColor === 'transparent' && 'bg-muted/50'
+  );
+
   return (
-    <section className="py-16 px-6 bg-muted/50">
+    <section 
+      className={bgClass}
+      style={{
+        paddingTop: `${style.paddingTop}px`,
+        paddingBottom: `${style.paddingBottom}px`,
+        paddingLeft: `${style.paddingLeft}px`,
+        paddingRight: `${style.paddingRight}px`,
+      }}
+    >
       <div className="container mx-auto">
-        <div className="text-center mb-12">
+        <div className={cn("mb-12", textAlignClass)}>
           <EditableText
             value={content.heading}
             onChange={(value) => onContentUpdate({ heading: value })}
@@ -328,11 +404,25 @@ function ServicesSection({ content, onContentUpdate }: SectionProps) {
   );
 }
 
-function TherapistsSection({ content, onContentUpdate }: SectionProps) {
+function TherapistsSection({ content, onContentUpdate, style = defaultStyle }: SectionProps) {
+  const textAlignClass = cn(
+    style.textAlign === 'left' && 'text-left',
+    style.textAlign === 'center' && 'text-center',
+    style.textAlign === 'right' && 'text-right'
+  );
+
   return (
-    <section className="py-16 px-6 bg-background">
+    <section 
+      className="bg-background"
+      style={{
+        paddingTop: `${style.paddingTop}px`,
+        paddingBottom: `${style.paddingBottom}px`,
+        paddingLeft: `${style.paddingLeft}px`,
+        paddingRight: `${style.paddingRight}px`,
+      }}
+    >
       <div className="container mx-auto">
-        <div className="text-center mb-12">
+        <div className={cn("mb-12", textAlignClass)}>
           <EditableText
             value={content.heading}
             onChange={(value) => onContentUpdate({ heading: value })}
@@ -344,7 +434,7 @@ function TherapistsSection({ content, onContentUpdate }: SectionProps) {
             value={content.description}
             onChange={(value) => onContentUpdate({ description: value })}
             as="p"
-            className="text-muted-foreground max-w-2xl mx-auto"
+            className={cn("text-muted-foreground max-w-2xl", style.textAlign === 'center' && 'mx-auto')}
             placeholder="Section description..."
           />
         </div>
@@ -377,11 +467,25 @@ function TherapistsSection({ content, onContentUpdate }: SectionProps) {
   );
 }
 
-function GallerySection({ content, onContentUpdate }: SectionProps) {
+function GallerySection({ content, onContentUpdate, style = defaultStyle }: SectionProps) {
+  const textAlignClass = cn(
+    style.textAlign === 'left' && 'text-left',
+    style.textAlign === 'center' && 'text-center',
+    style.textAlign === 'right' && 'text-right'
+  );
+
   return (
-    <section className="py-16 px-6 bg-muted/50">
+    <section 
+      className="bg-muted/50"
+      style={{
+        paddingTop: `${style.paddingTop}px`,
+        paddingBottom: `${style.paddingBottom}px`,
+        paddingLeft: `${style.paddingLeft}px`,
+        paddingRight: `${style.paddingRight}px`,
+      }}
+    >
       <div className="container mx-auto">
-        <div className="text-center mb-12">
+        <div className={cn("mb-12", textAlignClass)}>
           <EditableText
             value={content.heading}
             onChange={(value) => onContentUpdate({ heading: value })}
