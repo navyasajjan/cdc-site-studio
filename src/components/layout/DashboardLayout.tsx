@@ -18,7 +18,6 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Bell,
   LogOut,
   HelpCircle,
 } from 'lucide-react';
@@ -34,6 +33,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { NotificationPanel } from '@/components/notifications/NotificationPanel';
 
 interface NavItem {
   label: string;
@@ -233,10 +233,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-accent rounded-full" />
-            </Button>
+            <NotificationPanel />
             <Button variant="ghost" size="icon">
               <HelpCircle className="w-5 h-5" />
             </Button>
