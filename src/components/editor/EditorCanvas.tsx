@@ -35,25 +35,33 @@ const iconMap: Record<string, React.ElementType> = {
   Users,
 };
 
+interface SectionStyle {
+  paddingTop: number;
+  paddingBottom: number;
+  paddingLeft: number;
+  paddingRight: number;
+  textAlign: 'left' | 'center' | 'right';
+  backgroundColor: string;
+  customBackgroundColor?: string;
+  backgroundType: 'color' | 'gradient' | 'image';
+  backgroundImage?: string;
+  fontFamily?: string;
+  headingFontFamily?: string;
+  fontSize?: 'small' | 'medium' | 'large';
+  textColor?: string;
+  customTextColor?: string;
+}
+
 interface SectionProps {
   content: any;
   sectionId: string;
   onContentUpdate: (content: Record<string, any>) => void;
-  style?: {
-    paddingTop: number;
-    paddingBottom: number;
-    paddingLeft: number;
-    paddingRight: number;
-    textAlign: 'left' | 'center' | 'right';
-    backgroundColor: string;
-    backgroundType: 'color' | 'gradient' | 'image';
-    backgroundImage?: string;
-  };
+  style?: SectionStyle;
   siteSettings?: SiteSettings;
   onUpdateSiteSettings?: (settings: Partial<SiteSettings>) => void;
 }
 
-const defaultStyle = {
+const defaultStyle: SectionStyle = {
   paddingTop: 64,
   paddingBottom: 64,
   paddingLeft: 24,
@@ -61,6 +69,74 @@ const defaultStyle = {
   textAlign: 'center' as const,
   backgroundColor: 'transparent',
   backgroundType: 'color' as const,
+};
+
+// Helper function to get background color from style
+const getBackgroundColor = (style: SectionStyle): string | undefined => {
+  if (style.backgroundColor === 'custom' && style.customBackgroundColor) {
+    return style.customBackgroundColor;
+  }
+  return undefined;
+};
+
+// Helper function to get text color from style
+const getTextColor = (style: SectionStyle): string | undefined => {
+  if (style.textColor === 'custom' && style.customTextColor) {
+    return style.customTextColor;
+  }
+  return undefined;
+};
+
+// Helper function to get font size class
+const getFontSizeClass = (fontSize?: 'small' | 'medium' | 'large') => {
+  switch (fontSize) {
+    case 'small': return 'text-sm';
+    case 'large': return 'text-lg';
+    default: return 'text-base';
+  }
+};
+
+// Helper function to build section inline styles
+const getSectionStyles = (style: SectionStyle): React.CSSProperties => {
+  const styles: React.CSSProperties = {
+    paddingTop: `${style.paddingTop}px`,
+    paddingBottom: `${style.paddingBottom}px`,
+    paddingLeft: `${style.paddingLeft}px`,
+    paddingRight: `${style.paddingRight}px`,
+  };
+
+  // Apply custom background color
+  const bgColor = getBackgroundColor(style);
+  if (bgColor) {
+    styles.backgroundColor = bgColor;
+  }
+
+  // Apply custom text color
+  const textColor = getTextColor(style);
+  if (textColor) {
+    styles.color = textColor;
+  }
+
+  // Apply font family
+  if (style.fontFamily) {
+    styles.fontFamily = style.fontFamily;
+  }
+
+  return styles;
+};
+
+// Helper function to get background class when not using custom color
+const getBackgroundClass = (style: SectionStyle, defaultClass: string = 'bg-background'): string => {
+  if (style.backgroundColor === 'custom' && style.customBackgroundColor) {
+    return ''; // Using inline style instead
+  }
+  switch (style.backgroundColor) {
+    case 'primary': return 'bg-primary text-primary-foreground';
+    case 'secondary': return 'bg-secondary';
+    case 'muted': return 'bg-muted';
+    case 'transparent': return defaultClass;
+    default: return defaultClass;
+  }
 };
 
 export function EditorCanvas() {
@@ -331,22 +407,15 @@ function AboutSection({ content, onContentUpdate, style = defaultStyle }: Sectio
     style.textAlign === 'right' && 'text-right'
   );
 
-  const bgClass = cn(
-    style.backgroundColor === 'primary' && 'bg-primary text-primary-foreground',
-    style.backgroundColor === 'secondary' && 'bg-secondary',
-    style.backgroundColor === 'muted' && 'bg-muted',
-    style.backgroundColor === 'transparent' && 'bg-background'
-  );
+  const bgClass = getBackgroundClass(style, 'bg-background');
+  const sectionStyles = getSectionStyles(style);
+  const headingStyle: React.CSSProperties = style.headingFontFamily ? { fontFamily: style.headingFontFamily } : {};
+  const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
 
   return (
     <section 
-      className={cn("bg-background", bgClass)}
-      style={{
-        paddingTop: `${style.paddingTop}px`,
-        paddingBottom: `${style.paddingBottom}px`,
-        paddingLeft: `${style.paddingLeft}px`,
-        paddingRight: `${style.paddingRight}px`,
-      }}
+      className={cn("bg-background", bgClass, getFontSizeClass(style.fontSize))}
+      style={sectionStyles}
     >
       <div className="container mx-auto max-w-4xl">
         <div className={cn("mb-12", textAlignClass)}>
@@ -354,14 +423,16 @@ function AboutSection({ content, onContentUpdate, style = defaultStyle }: Sectio
             value="About Our Center"
             onChange={() => {}}
             as="h2"
-            className="text-3xl font-bold text-foreground mb-4"
+            className="text-3xl font-bold mb-4"
+            style={{ ...headingStyle, ...textColorStyle }}
             disabled
           />
           <EditableText
             value={content.mission}
             onChange={(value) => onContentUpdate({ mission: value })}
             as="p"
-            className={cn("text-muted-foreground max-w-2xl", style.textAlign === 'center' && 'mx-auto')}
+            className={cn("max-w-2xl", style.textAlign === 'center' && 'mx-auto', !getTextColor(style) && 'text-muted-foreground')}
+            style={textColorStyle}
             placeholder="Enter mission statement..."
           />
         </div>
@@ -371,7 +442,7 @@ function AboutSection({ content, onContentUpdate, style = defaultStyle }: Sectio
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
               <Award className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="font-semibold mb-2">
+            <h3 className="font-semibold mb-2" style={textColorStyle}>
               <EditableText
                 value={String(content.yearsExperience)}
                 onChange={(value) => onContentUpdate({ yearsExperience: parseInt(value) || 0 })}
@@ -384,14 +455,14 @@ function AboutSection({ content, onContentUpdate, style = defaultStyle }: Sectio
             <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
               <Users className="w-6 h-6 text-accent" />
             </div>
-            <h3 className="font-semibold mb-2">Expert Team</h3>
+            <h3 className="font-semibold mb-2" style={textColorStyle}>Expert Team</h3>
             <p className="text-sm text-muted-foreground">Certified Specialists</p>
           </Card>
           <Card className="text-center p-6">
             <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
               <Check className="w-6 h-6 text-success" />
             </div>
-            <h3 className="font-semibold mb-2">Verified</h3>
+            <h3 className="font-semibold mb-2" style={textColorStyle}>Verified</h3>
             <p className="text-sm text-muted-foreground">
               {content.manoNiketanVerified ? 'ManoNiketan Certified' : 'Quality Assured'}
             </p>
@@ -399,12 +470,13 @@ function AboutSection({ content, onContentUpdate, style = defaultStyle }: Sectio
         </div>
 
         <div className="bg-muted rounded-xl p-6">
-          <h3 className="font-semibold mb-3">Our Philosophy</h3>
+          <h3 className="font-semibold mb-3" style={textColorStyle}>Our Philosophy</h3>
           <EditableText
             value={content.philosophy}
             onChange={(value) => onContentUpdate({ philosophy: value })}
             as="p"
-            className="text-muted-foreground"
+            className={!getTextColor(style) ? "text-muted-foreground" : ""}
+            style={textColorStyle}
             placeholder="Enter philosophy..."
           />
         </div>
@@ -420,22 +492,15 @@ function ServicesSection({ content, onContentUpdate, style = defaultStyle }: Sec
     style.textAlign === 'right' && 'text-right'
   );
 
-  const bgClass = cn(
-    style.backgroundColor === 'primary' && 'bg-primary text-primary-foreground',
-    style.backgroundColor === 'secondary' && 'bg-secondary',
-    style.backgroundColor === 'muted' && 'bg-muted',
-    style.backgroundColor === 'transparent' && 'bg-muted/50'
-  );
+  const bgClass = getBackgroundClass(style, 'bg-muted/50');
+  const sectionStyles = getSectionStyles(style);
+  const headingStyle: React.CSSProperties = style.headingFontFamily ? { fontFamily: style.headingFontFamily } : {};
+  const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
 
   return (
     <section 
-      className={bgClass}
-      style={{
-        paddingTop: `${style.paddingTop}px`,
-        paddingBottom: `${style.paddingBottom}px`,
-        paddingLeft: `${style.paddingLeft}px`,
-        paddingRight: `${style.paddingRight}px`,
-      }}
+      className={cn(bgClass, getFontSizeClass(style.fontSize))}
+      style={sectionStyles}
     >
       <div className="container mx-auto">
         <div className={cn("mb-12", textAlignClass)}>
@@ -443,14 +508,16 @@ function ServicesSection({ content, onContentUpdate, style = defaultStyle }: Sec
             value={content.heading}
             onChange={(value) => onContentUpdate({ heading: value })}
             as="h2"
-            className="text-3xl font-bold text-foreground mb-4"
+            className="text-3xl font-bold mb-4"
+            style={{ ...headingStyle, ...textColorStyle }}
             placeholder="Section heading..."
           />
           <EditableText
             value={content.description}
             onChange={(value) => onContentUpdate({ description: value })}
             as="p"
-            className="text-muted-foreground max-w-2xl mx-auto"
+            className={cn("max-w-2xl mx-auto", !getTextColor(style) && "text-muted-foreground")}
+            style={textColorStyle}
             placeholder="Section description..."
           />
         </div>
@@ -487,15 +554,15 @@ function TherapistsSection({ content, onContentUpdate, style = defaultStyle }: S
     style.textAlign === 'right' && 'text-right'
   );
 
+  const bgClass = getBackgroundClass(style, 'bg-background');
+  const sectionStyles = getSectionStyles(style);
+  const headingStyle: React.CSSProperties = style.headingFontFamily ? { fontFamily: style.headingFontFamily } : {};
+  const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
+
   return (
     <section 
-      className="bg-background"
-      style={{
-        paddingTop: `${style.paddingTop}px`,
-        paddingBottom: `${style.paddingBottom}px`,
-        paddingLeft: `${style.paddingLeft}px`,
-        paddingRight: `${style.paddingRight}px`,
-      }}
+      className={cn(bgClass, getFontSizeClass(style.fontSize))}
+      style={sectionStyles}
     >
       <div className="container mx-auto">
         <div className={cn("mb-12", textAlignClass)}>
@@ -503,14 +570,16 @@ function TherapistsSection({ content, onContentUpdate, style = defaultStyle }: S
             value={content.heading}
             onChange={(value) => onContentUpdate({ heading: value })}
             as="h2"
-            className="text-3xl font-bold text-foreground mb-4"
+            className="text-3xl font-bold mb-4"
+            style={{ ...headingStyle, ...textColorStyle }}
             placeholder="Section heading..."
           />
           <EditableText
             value={content.description}
             onChange={(value) => onContentUpdate({ description: value })}
             as="p"
-            className={cn("text-muted-foreground max-w-2xl", style.textAlign === 'center' && 'mx-auto')}
+            className={cn("max-w-2xl", style.textAlign === 'center' && 'mx-auto', !getTextColor(style) && "text-muted-foreground")}
+            style={textColorStyle}
             placeholder="Section description..."
           />
         </div>
@@ -550,15 +619,15 @@ function GallerySection({ content, onContentUpdate, style = defaultStyle }: Sect
     style.textAlign === 'right' && 'text-right'
   );
 
+  const bgClass = getBackgroundClass(style, 'bg-muted/50');
+  const sectionStyles = getSectionStyles(style);
+  const headingStyle: React.CSSProperties = style.headingFontFamily ? { fontFamily: style.headingFontFamily } : {};
+  const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
+
   return (
     <section 
-      className="bg-muted/50"
-      style={{
-        paddingTop: `${style.paddingTop}px`,
-        paddingBottom: `${style.paddingBottom}px`,
-        paddingLeft: `${style.paddingLeft}px`,
-        paddingRight: `${style.paddingRight}px`,
-      }}
+      className={cn(bgClass, getFontSizeClass(style.fontSize))}
+      style={sectionStyles}
     >
       <div className="container mx-auto">
         <div className={cn("mb-12", textAlignClass)}>
@@ -566,14 +635,16 @@ function GallerySection({ content, onContentUpdate, style = defaultStyle }: Sect
             value={content.heading}
             onChange={(value) => onContentUpdate({ heading: value })}
             as="h2"
-            className="text-3xl font-bold text-foreground mb-4"
+            className="text-3xl font-bold mb-4"
+            style={{ ...headingStyle, ...textColorStyle }}
             placeholder="Section heading..."
           />
           <EditableText
             value={content.description}
             onChange={(value) => onContentUpdate({ description: value })}
             as="p"
-            className="text-muted-foreground max-w-2xl mx-auto"
+            className={cn("max-w-2xl mx-auto", !getTextColor(style) && "text-muted-foreground")}
+            style={textColorStyle}
             placeholder="Section description..."
           />
         </div>
@@ -607,9 +678,17 @@ function GallerySection({ content, onContentUpdate, style = defaultStyle }: Sect
   );
 }
 
-function BookingSection({ content, onContentUpdate }: SectionProps) {
+function BookingSection({ content, onContentUpdate, style = defaultStyle }: SectionProps) {
+  const bgClass = getBackgroundClass(style, 'bg-primary text-primary-foreground');
+  const sectionStyles = getSectionStyles(style);
+  const headingStyle: React.CSSProperties = style.headingFontFamily ? { fontFamily: style.headingFontFamily } : {};
+  const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
+
   return (
-    <section className="py-16 px-6 bg-primary text-primary-foreground">
+    <section 
+      className={cn(bgClass, getFontSizeClass(style.fontSize))}
+      style={sectionStyles}
+    >
       <div className="container mx-auto max-w-4xl text-center">
         <Calendar className="w-12 h-12 mx-auto mb-6 opacity-80" />
         <EditableText
@@ -617,6 +696,7 @@ function BookingSection({ content, onContentUpdate }: SectionProps) {
           onChange={(value) => onContentUpdate({ heading: value })}
           as="h2"
           className="text-3xl font-bold mb-4"
+          style={{ ...headingStyle, ...textColorStyle }}
           placeholder="Section heading..."
         />
         <EditableText
@@ -624,6 +704,7 @@ function BookingSection({ content, onContentUpdate }: SectionProps) {
           onChange={(value) => onContentUpdate({ subheading: value })}
           as="p"
           className="text-lg mb-8 opacity-90"
+          style={textColorStyle}
           placeholder="Section description..."
         />
         <div className="flex flex-wrap items-center justify-center gap-4">
@@ -639,7 +720,11 @@ function BookingSection({ content, onContentUpdate }: SectionProps) {
   );
 }
 
-function AnalyticsSection({ content, onContentUpdate }: SectionProps) {
+function AnalyticsSection({ content, onContentUpdate, style = defaultStyle }: SectionProps) {
+  const bgClass = getBackgroundClass(style, 'bg-background');
+  const sectionStyles = getSectionStyles(style);
+  const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
+
   const handleStatUpdate = (index: number, field: 'value' | 'label', value: string) => {
     const newStats = [...(content.stats || [])];
     newStats[index] = { ...newStats[index], [field]: value };
@@ -647,7 +732,10 @@ function AnalyticsSection({ content, onContentUpdate }: SectionProps) {
   };
 
   return (
-    <section className="py-16 px-6 bg-background">
+    <section 
+      className={cn(bgClass, getFontSizeClass(style.fontSize))}
+      style={sectionStyles}
+    >
       <div className="container mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {content.stats?.map((stat: any, index: number) => (
@@ -656,14 +744,16 @@ function AnalyticsSection({ content, onContentUpdate }: SectionProps) {
                 value={stat.value}
                 onChange={(value) => handleStatUpdate(index, 'value', value)}
                 as="p"
-                className="text-4xl font-bold text-primary mb-2"
+                className={cn("text-4xl font-bold mb-2", !getTextColor(style) && "text-primary")}
+                style={textColorStyle}
                 placeholder="0"
               />
               <EditableText
                 value={stat.label}
                 onChange={(value) => handleStatUpdate(index, 'label', value)}
                 as="p"
-                className="text-muted-foreground"
+                className={!getTextColor(style) ? "text-muted-foreground" : ""}
+                style={textColorStyle}
                 placeholder="Label..."
               />
             </div>
@@ -674,18 +764,26 @@ function AnalyticsSection({ content, onContentUpdate }: SectionProps) {
   );
 }
 
-function TestimonialsSection({ content, onContentUpdate }: SectionProps) {
+function TestimonialsSection({ content, onContentUpdate, style = defaultStyle }: SectionProps) {
   const featuredReviews = reviews.filter(r => r.approved && r.featured);
+  const bgClass = getBackgroundClass(style, 'bg-muted/50');
+  const sectionStyles = getSectionStyles(style);
+  const headingStyle: React.CSSProperties = style.headingFontFamily ? { fontFamily: style.headingFontFamily } : {};
+  const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
 
   return (
-    <section className="py-16 px-6 bg-muted/50">
+    <section 
+      className={cn(bgClass, getFontSizeClass(style.fontSize))}
+      style={sectionStyles}
+    >
       <div className="container mx-auto">
         <div className="text-center mb-12">
           <EditableText
             value={content.heading}
             onChange={(value) => onContentUpdate({ heading: value })}
             as="h2"
-            className="text-3xl font-bold text-foreground mb-4"
+            className="text-3xl font-bold mb-4"
+            style={{ ...headingStyle, ...textColorStyle }}
             placeholder="Section heading..."
           />
         </div>
@@ -719,16 +817,25 @@ function TestimonialsSection({ content, onContentUpdate }: SectionProps) {
   );
 }
 
-function PricingSection({ content, onContentUpdate }: SectionProps) {
+function PricingSection({ content, onContentUpdate, style = defaultStyle }: SectionProps) {
+  const bgClass = getBackgroundClass(style, 'bg-background');
+  const sectionStyles = getSectionStyles(style);
+  const headingStyle: React.CSSProperties = style.headingFontFamily ? { fontFamily: style.headingFontFamily } : {};
+  const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
+
   return (
-    <section className="py-16 px-6 bg-background">
+    <section 
+      className={cn(bgClass, getFontSizeClass(style.fontSize))}
+      style={sectionStyles}
+    >
       <div className="container mx-auto">
         <div className="text-center mb-12">
           <EditableText
             value={content.heading}
             onChange={(value) => onContentUpdate({ heading: value })}
             as="h2"
-            className="text-3xl font-bold text-foreground mb-4"
+            className="text-3xl font-bold mb-4"
+            style={{ ...headingStyle, ...textColorStyle }}
             placeholder="Section heading..."
           />
         </div>
@@ -764,7 +871,8 @@ function PricingSection({ content, onContentUpdate }: SectionProps) {
             value={content.disclaimer}
             onChange={(value) => onContentUpdate({ disclaimer: value })}
             as="p"
-            className="text-center text-sm text-muted-foreground mt-8 max-w-2xl mx-auto"
+            className={cn("text-center text-sm mt-8 max-w-2xl mx-auto", !getTextColor(style) && "text-muted-foreground")}
+            style={textColorStyle}
             placeholder="Disclaimer text..."
           />
         )}
@@ -773,16 +881,25 @@ function PricingSection({ content, onContentUpdate }: SectionProps) {
   );
 }
 
-function LearningSection({ content, onContentUpdate }: SectionProps) {
+function LearningSection({ content, onContentUpdate, style = defaultStyle }: SectionProps) {
+  const bgClass = getBackgroundClass(style, 'bg-muted/50');
+  const sectionStyles = getSectionStyles(style);
+  const headingStyle: React.CSSProperties = style.headingFontFamily ? { fontFamily: style.headingFontFamily } : {};
+  const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
+
   return (
-    <section className="py-16 px-6 bg-muted/50">
+    <section 
+      className={cn(bgClass, getFontSizeClass(style.fontSize))}
+      style={sectionStyles}
+    >
       <div className="container mx-auto">
         <div className="text-center mb-12">
           <EditableText
             value={content.heading}
             onChange={(value) => onContentUpdate({ heading: value })}
             as="h2"
-            className="text-3xl font-bold text-foreground mb-4"
+            className="text-3xl font-bold mb-4"
+            style={{ ...headingStyle, ...textColorStyle }}
             placeholder="Section heading..."
           />
         </div>
@@ -816,16 +933,25 @@ function LearningSection({ content, onContentUpdate }: SectionProps) {
   );
 }
 
-function ContactSection({ content, onContentUpdate }: SectionProps) {
+function ContactSection({ content, onContentUpdate, style = defaultStyle }: SectionProps) {
+  const bgClass = getBackgroundClass(style, 'bg-background');
+  const sectionStyles = getSectionStyles(style);
+  const headingStyle: React.CSSProperties = style.headingFontFamily ? { fontFamily: style.headingFontFamily } : {};
+  const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
+
   return (
-    <section className="py-16 px-6 bg-background">
+    <section 
+      className={cn(bgClass, getFontSizeClass(style.fontSize))}
+      style={sectionStyles}
+    >
       <div className="container mx-auto max-w-4xl">
         <div className="text-center mb-12">
           <EditableText
             value={content.heading}
             onChange={(value) => onContentUpdate({ heading: value })}
             as="h2"
-            className="text-3xl font-bold text-foreground mb-4"
+            className="text-3xl font-bold mb-4"
+            style={{ ...headingStyle, ...textColorStyle }}
             placeholder="Section heading..."
           />
         </div>
@@ -837,8 +963,8 @@ function ContactSection({ content, onContentUpdate }: SectionProps) {
                 <Phone className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium">Phone</p>
-                <p className="text-muted-foreground">{cdcData.phone}</p>
+                <p className="font-medium" style={textColorStyle}>Phone</p>
+                <p className={!getTextColor(style) ? "text-muted-foreground" : ""} style={textColorStyle}>{cdcData.phone}</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -846,8 +972,8 @@ function ContactSection({ content, onContentUpdate }: SectionProps) {
                 <Mail className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium">Email</p>
-                <p className="text-muted-foreground">{cdcData.email}</p>
+                <p className="font-medium" style={textColorStyle}>Email</p>
+                <p className={!getTextColor(style) ? "text-muted-foreground" : ""} style={textColorStyle}>{cdcData.email}</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -855,8 +981,8 @@ function ContactSection({ content, onContentUpdate }: SectionProps) {
                 <MapPin className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium">Address</p>
-                <p className="text-muted-foreground">{cdcData.address}</p>
+                <p className="font-medium" style={textColorStyle}>Address</p>
+                <p className={!getTextColor(style) ? "text-muted-foreground" : ""} style={textColorStyle}>{cdcData.address}</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -864,8 +990,8 @@ function ContactSection({ content, onContentUpdate }: SectionProps) {
                 <Clock className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium">Working Hours</p>
-                <p className="text-muted-foreground">{cdcData.workingHours}</p>
+                <p className="font-medium" style={textColorStyle}>Working Hours</p>
+                <p className={!getTextColor(style) ? "text-muted-foreground" : ""} style={textColorStyle}>{cdcData.workingHours}</p>
               </div>
             </div>
           </div>
@@ -877,7 +1003,7 @@ function ContactSection({ content, onContentUpdate }: SectionProps) {
 
         {content.showParkingInfo && content.parkingInfo && (
           <div className="mt-8 p-4 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm" style={textColorStyle}>
               <strong>Parking:</strong>{' '}
               <EditableText
                 value={content.parkingInfo}
@@ -892,9 +1018,19 @@ function ContactSection({ content, onContentUpdate }: SectionProps) {
   );
 }
 
-function FooterSection({ content }: SectionProps) {
+function FooterSection({ content, style = defaultStyle }: SectionProps) {
+  const sectionStyles = getSectionStyles(style);
+  const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
+  const hasCustomBg = style.backgroundColor === 'custom' && style.customBackgroundColor;
+
   return (
-    <footer className="py-12 px-6 bg-foreground text-background">
+    <footer 
+      className={cn(
+        getFontSizeClass(style.fontSize),
+        !hasCustomBg && "bg-foreground text-background"
+      )}
+      style={sectionStyles}
+    >
       <div className="container mx-auto">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div>
@@ -902,43 +1038,43 @@ function FooterSection({ content }: SectionProps) {
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-sm">BH</span>
               </div>
-              <span className="font-semibold">{cdcData.name}</span>
+              <span className="font-semibold" style={textColorStyle}>{cdcData.name}</span>
             </div>
-            <p className="text-sm opacity-70">{cdcData.tagline}</p>
+            <p className="text-sm opacity-70" style={textColorStyle}>{cdcData.tagline}</p>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
+            <h4 className="font-semibold mb-4" style={textColorStyle}>Quick Links</h4>
             <ul className="space-y-2 text-sm opacity-70">
-              <li><a href="#" className="hover:opacity-100">About Us</a></li>
-              <li><a href="#" className="hover:opacity-100">Services</a></li>
-              <li><a href="#" className="hover:opacity-100">Our Team</a></li>
-              <li><a href="#" className="hover:opacity-100">Contact</a></li>
+              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>About Us</a></li>
+              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Services</a></li>
+              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Our Team</a></li>
+              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Contact</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Services</h4>
+            <h4 className="font-semibold mb-4" style={textColorStyle}>Services</h4>
             <ul className="space-y-2 text-sm opacity-70">
-              <li><a href="#" className="hover:opacity-100">Speech Therapy</a></li>
-              <li><a href="#" className="hover:opacity-100">Occupational Therapy</a></li>
-              <li><a href="#" className="hover:opacity-100">Behavioral Therapy</a></li>
-              <li><a href="#" className="hover:opacity-100">Early Intervention</a></li>
+              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Speech Therapy</a></li>
+              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Occupational Therapy</a></li>
+              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Behavioral Therapy</a></li>
+              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Early Intervention</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Legal</h4>
+            <h4 className="font-semibold mb-4" style={textColorStyle}>Legal</h4>
             <ul className="space-y-2 text-sm opacity-70">
-              <li><a href="#" className="hover:opacity-100">Privacy Policy</a></li>
-              <li><a href="#" className="hover:opacity-100">Terms of Service</a></li>
-              <li><a href="#" className="hover:opacity-100">HIPAA Compliance</a></li>
+              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Privacy Policy</a></li>
+              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Terms of Service</a></li>
+              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>HIPAA Compliance</a></li>
             </ul>
           </div>
         </div>
 
         <div className="pt-8 border-t border-background/20 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm opacity-70">
+          <p className="text-sm opacity-70" style={textColorStyle}>
             © {new Date().getFullYear()} {cdcData.name}. All rights reserved.
           </p>
           {content.manoNiketanBranding && (

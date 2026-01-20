@@ -5,6 +5,7 @@ interface EditableTextProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  style?: React.CSSProperties;
   as?: 'span' | 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'div';
   placeholder?: string;
   maxLength?: number;
@@ -15,6 +16,7 @@ export function EditableText({
   value,
   onChange,
   className,
+  style: propStyle,
   as = 'span',
   placeholder = 'Click to edit...',
   maxLength,
@@ -118,7 +120,7 @@ export function EditableText({
     onInput: handleInput,
     onPaste: handlePaste,
     className: baseClasses,
-    style: { minWidth: '1em', display: 'inline-block' },
+    style: { minWidth: '1em', display: 'inline-block', ...propStyle },
     children: displayValue,
   };
 
