@@ -8,6 +8,7 @@ export interface SiteSettings {
   logoSize: 'small' | 'medium' | 'large';
   showLogoInHero: boolean;
   showLogoInHeader: boolean;
+  heroLogoPosition: 'top-left' | 'top-center' | 'top-right' | 'center-left' | 'center' | 'center-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
 }
 
 interface EditorContextType {
@@ -40,6 +41,7 @@ const initialSiteSettings: SiteSettings = {
   logoSize: 'medium',
   showLogoInHero: true,
   showLogoInHeader: true,
+  heroLogoPosition: 'top-left',
 };
 
 export function EditorProvider({ children }: { children: ReactNode }) {

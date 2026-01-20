@@ -1,4 +1,4 @@
-import { useEditor } from '@/contexts/EditorContext';
+import { useEditor, SiteSettings } from '@/contexts/EditorContext';
 import { cn } from '@/lib/utils';
 import { cdcData, services, therapists, galleryItems, reviews, pricingPackages } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,8 @@ import {
   Award,
   Clock,
   Calendar,
+  X,
+  Move,
 } from 'lucide-react';
 
 const iconMap: Record<string, React.ElementType> = {
@@ -47,13 +49,8 @@ interface SectionProps {
     backgroundType: 'color' | 'gradient' | 'image';
     backgroundImage?: string;
   };
-  siteSettings?: {
-    logo: string;
-    logoPosition: 'left' | 'center' | 'right';
-    logoSize: 'small' | 'medium' | 'large';
-    showLogoInHero: boolean;
-    showLogoInHeader: boolean;
-  };
+  siteSettings?: SiteSettings;
+  onUpdateSiteSettings?: (settings: Partial<SiteSettings>) => void;
 }
 
 const defaultStyle = {
@@ -67,8 +64,7 @@ const defaultStyle = {
 };
 
 export function EditorCanvas() {
-  const { sections, state, siteSettings, setSelectedSection, updateSectionContent } = useEditor();
-
+  const { sections, state, siteSettings, setSelectedSection, updateSectionContent, updateSiteSettings } = useEditor();
   const previewClasses = cn(
     'transition-all duration-300 bg-white mx-auto shadow-elevated rounded-lg overflow-hidden',
     state.previewMode === 'desktop' && 'w-full max-w-[1200px]',
@@ -144,7 +140,7 @@ export function EditorCanvas() {
             </div>
 
             {/* Render Section Content */}
-            {section.type === 'hero' && <HeroSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} siteSettings={siteSettings} />}
+            {section.type === 'hero' && <HeroSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} siteSettings={siteSettings} onUpdateSiteSettings={updateSiteSettings} />}
             {section.type === 'about' && <AboutSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
             {section.type === 'services' && <ServicesSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
             {section.type === 'therapists' && <TherapistsSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} style={section.style || defaultStyle} />}
@@ -163,7 +159,7 @@ export function EditorCanvas() {
   );
 }
 
-function HeroSection({ content, onContentUpdate, style = defaultStyle, siteSettings }: SectionProps) {
+function HeroSection({ content, onContentUpdate, style = defaultStyle, siteSettings, onUpdateSiteSettings }: SectionProps) {
   const logoSizeClass = cn(
     siteSettings?.logoSize === 'small' && 'h-10 sm:h-12',
     siteSettings?.logoSize === 'medium' && 'h-14 sm:h-16',
@@ -175,6 +171,35 @@ function HeroSection({ content, onContentUpdate, style = defaultStyle, siteSetti
     style.textAlign === 'center' && 'text-center items-center',
     style.textAlign === 'right' && 'text-right items-end'
   );
+
+  const getLogoPositionClasses = (position: string) => {
+    switch (position) {
+      case 'top-left': return 'top-4 left-4';
+      case 'top-center': return 'top-4 left-1/2 -translate-x-1/2';
+      case 'top-right': return 'top-4 right-4';
+      case 'center-left': return 'top-1/2 left-4 -translate-y-1/2';
+      case 'center': return 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2';
+      case 'center-right': return 'top-1/2 right-4 -translate-y-1/2';
+      case 'bottom-left': return 'bottom-4 left-4';
+      case 'bottom-center': return 'bottom-4 left-1/2 -translate-x-1/2';
+      case 'bottom-right': return 'bottom-4 right-4';
+      default: return 'top-4 left-4';
+    }
+  };
+
+  const positionOptions: Array<SiteSettings['heroLogoPosition']> = [
+    'top-left', 'top-center', 'top-right',
+    'center-left', 'center', 'center-right',
+    'bottom-left', 'bottom-center', 'bottom-right'
+  ];
+
+  const handlePositionChange = (position: SiteSettings['heroLogoPosition']) => {
+    onUpdateSiteSettings?.({ heroLogoPosition: position });
+  };
+
+  const handleRemoveLogo = () => {
+    onUpdateSiteSettings?.({ showLogoInHero: false });
+  };
 
   return (
     <section
@@ -189,17 +214,68 @@ function HeroSection({ content, onContentUpdate, style = defaultStyle, siteSetti
           : 'linear-gradient(135deg, hsl(174 58% 39%) 0%, hsl(174 58% 50%) 100%)',
       }}
     >
-      <div className={cn("container mx-auto px-6 text-white flex flex-col", textAlignClass)}>
-        {/* Logo in Hero */}
-        {siteSettings?.showLogoInHero && siteSettings.logo && (
-          <div className="mb-6">
+      {/* Movable Logo in Hero */}
+      {siteSettings?.showLogoInHero && siteSettings.logo && (
+        <div 
+          className={cn(
+            'absolute z-20 group',
+            getLogoPositionClasses(siteSettings.heroLogoPosition || 'top-left')
+          )}
+        >
+          <div className="relative">
             <img 
               src={siteSettings.logo} 
               alt="Site logo" 
-              className={cn('object-contain', logoSizeClass, style.textAlign === 'center' && 'mx-auto')}
+              className={cn('object-contain', logoSizeClass)}
             />
+            {/* Logo Controls on Hover */}
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-background/95 rounded-lg shadow-elevated p-1 border border-border">
+              {/* Position Grid */}
+              <div className="flex flex-wrap w-[78px] gap-0.5">
+                {positionOptions.map((pos) => (
+                  <button
+                    key={pos}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePositionChange(pos);
+                    }}
+                    className={cn(
+                      'w-6 h-6 rounded flex items-center justify-center transition-colors',
+                      siteSettings.heroLogoPosition === pos 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                    )}
+                    title={pos.replace('-', ' ')}
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-current" />
+                  </button>
+                ))}
+              </div>
+              <div className="w-px h-6 bg-border mx-1" />
+              {/* Remove Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveLogo();
+                }}
+                className="w-6 h-6 rounded flex items-center justify-center bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors"
+                title="Hide logo from hero"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+            {/* Move indicator */}
+            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Badge variant="secondary" className="text-[10px] gap-1 bg-background/95 shadow-sm">
+                <Move className="w-3 h-3" />
+                Click to move
+              </Badge>
+            </div>
           </div>
-        )}
+        </div>
+      )}
+
+      <div className={cn("container mx-auto px-6 text-white flex flex-col", textAlignClass)}>
         <EditableText
           value={content.headline}
           onChange={(value) => onContentUpdate({ headline: value })}
