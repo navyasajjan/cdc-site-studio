@@ -312,7 +312,7 @@ function AboutPreview({ content }: { content: any }) {
       <div className="container mx-auto max-w-4xl">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold mb-4">About Our Center</h2>
-          <p className="text-muted-foreground">{content.mission}</p>
+          <p className="text-muted-foreground max-w-none w-full whitespace-normal md:whitespace-nowrap">{content.mission}</p>
         </div>
         <div className="bg-muted rounded-lg p-6 mb-6">
           <h3 className="font-semibold mb-2">Our Philosophy</h3>
