@@ -4,6 +4,7 @@ import { cdcData, services, therapists, galleryItems, reviews, pricingPackages }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { EditableText } from './EditableText';
 import {
   MessageCircle,
   Hand,
@@ -32,8 +33,14 @@ const iconMap: Record<string, React.ElementType> = {
   Users,
 };
 
+interface SectionProps {
+  content: any;
+  sectionId: string;
+  onContentUpdate: (content: Record<string, any>) => void;
+}
+
 export function EditorCanvas() {
-  const { sections, state, setSelectedSection } = useEditor();
+  const { sections, state, setSelectedSection, updateSectionContent } = useEditor();
 
   const previewClasses = cn(
     'transition-all duration-300 bg-white mx-auto shadow-elevated rounded-lg overflow-hidden',
@@ -43,6 +50,10 @@ export function EditorCanvas() {
   );
 
   const visibleSections = sections.filter(s => s.visible).sort((a, b) => a.order - b.order);
+
+  const handleContentUpdate = (sectionId: string) => (content: Record<string, any>) => {
+    updateSectionContent(sectionId, content);
+  };
 
   return (
     <div
@@ -77,18 +88,18 @@ export function EditorCanvas() {
             </div>
 
             {/* Render Section Content */}
-            {section.type === 'hero' && <HeroSection content={section.content} />}
-            {section.type === 'about' && <AboutSection content={section.content} />}
-            {section.type === 'services' && <ServicesSection content={section.content} />}
-            {section.type === 'therapists' && <TherapistsSection content={section.content} />}
-            {section.type === 'gallery' && <GallerySection content={section.content} />}
-            {section.type === 'booking' && <BookingSection content={section.content} />}
-            {section.type === 'analytics' && <AnalyticsSection content={section.content} />}
-            {section.type === 'testimonials' && <TestimonialsSection content={section.content} />}
-            {section.type === 'pricing' && <PricingSection content={section.content} />}
-            {section.type === 'learning' && <LearningSection content={section.content} />}
-            {section.type === 'contact' && <ContactSection content={section.content} />}
-            {section.type === 'footer' && <FooterSection content={section.content} />}
+            {section.type === 'hero' && <HeroSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
+            {section.type === 'about' && <AboutSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
+            {section.type === 'services' && <ServicesSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
+            {section.type === 'therapists' && <TherapistsSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
+            {section.type === 'gallery' && <GallerySection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
+            {section.type === 'booking' && <BookingSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
+            {section.type === 'analytics' && <AnalyticsSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
+            {section.type === 'testimonials' && <TestimonialsSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
+            {section.type === 'pricing' && <PricingSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
+            {section.type === 'learning' && <LearningSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
+            {section.type === 'contact' && <ContactSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
+            {section.type === 'footer' && <FooterSection content={section.content} sectionId={section.id} onContentUpdate={handleContentUpdate(section.id)} />}
           </div>
         ))}
       </div>
@@ -96,7 +107,7 @@ export function EditorCanvas() {
   );
 }
 
-function HeroSection({ content }: { content: any }) {
+function HeroSection({ content, onContentUpdate }: SectionProps) {
   return (
     <section
       className="relative min-h-[500px] flex items-center justify-center bg-cover bg-center"
@@ -107,12 +118,22 @@ function HeroSection({ content }: { content: any }) {
       }}
     >
       <div className="container mx-auto px-6 text-center text-white">
-        <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
-          {content.headline}
-        </h1>
-        <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto opacity-90">
-          {content.subheadline}
-        </p>
+        <EditableText
+          value={content.headline}
+          onChange={(value) => onContentUpdate({ headline: value })}
+          as="h1"
+          className="text-4xl md:text-5xl font-bold mb-6 leading-tight"
+          placeholder="Enter headline..."
+          maxLength={100}
+        />
+        <EditableText
+          value={content.subheadline}
+          onChange={(value) => onContentUpdate({ subheadline: value })}
+          as="p"
+          className="text-lg md:text-xl mb-8 max-w-2xl mx-auto opacity-90"
+          placeholder="Enter subheadline..."
+          maxLength={200}
+        />
         <div className="flex flex-wrap items-center justify-center gap-4">
           {content.ctas?.map((cta: any, index: number) => (
             <Button
@@ -124,7 +145,15 @@ function HeroSection({ content }: { content: any }) {
                 cta.style === 'outline' && 'border-white text-white hover:bg-white/10'
               )}
             >
-              {cta.text}
+              <EditableText
+                value={cta.text}
+                onChange={(value) => {
+                  const newCtas = [...content.ctas];
+                  newCtas[index] = { ...newCtas[index], text: value };
+                  onContentUpdate({ ctas: newCtas });
+                }}
+                placeholder="Button text..."
+              />
             </Button>
           ))}
         </div>
@@ -133,15 +162,25 @@ function HeroSection({ content }: { content: any }) {
   );
 }
 
-function AboutSection({ content }: { content: any }) {
+function AboutSection({ content, onContentUpdate }: SectionProps) {
   return (
     <section className="py-16 px-6 bg-background">
       <div className="container mx-auto max-w-4xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">About Our Center</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            {content.mission}
-          </p>
+          <EditableText
+            value="About Our Center"
+            onChange={() => {}}
+            as="h2"
+            className="text-3xl font-bold text-foreground mb-4"
+            disabled
+          />
+          <EditableText
+            value={content.mission}
+            onChange={(value) => onContentUpdate({ mission: value })}
+            as="p"
+            className="text-muted-foreground max-w-2xl mx-auto"
+            placeholder="Enter mission statement..."
+          />
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 mb-12">
@@ -149,7 +188,13 @@ function AboutSection({ content }: { content: any }) {
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
               <Award className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="font-semibold mb-2">{content.yearsExperience}+ Years</h3>
+            <h3 className="font-semibold mb-2">
+              <EditableText
+                value={String(content.yearsExperience)}
+                onChange={(value) => onContentUpdate({ yearsExperience: parseInt(value) || 0 })}
+                placeholder="0"
+              />+ Years
+            </h3>
             <p className="text-sm text-muted-foreground">Of Excellence</p>
           </Card>
           <Card className="text-center p-6">
@@ -172,20 +217,38 @@ function AboutSection({ content }: { content: any }) {
 
         <div className="bg-muted rounded-xl p-6">
           <h3 className="font-semibold mb-3">Our Philosophy</h3>
-          <p className="text-muted-foreground">{content.philosophy}</p>
+          <EditableText
+            value={content.philosophy}
+            onChange={(value) => onContentUpdate({ philosophy: value })}
+            as="p"
+            className="text-muted-foreground"
+            placeholder="Enter philosophy..."
+          />
         </div>
       </div>
     </section>
   );
 }
 
-function ServicesSection({ content }: { content: any }) {
+function ServicesSection({ content, onContentUpdate }: SectionProps) {
   return (
     <section className="py-16 px-6 bg-muted/50">
       <div className="container mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">{content.description}</p>
+          <EditableText
+            value={content.heading}
+            onChange={(value) => onContentUpdate({ heading: value })}
+            as="h2"
+            className="text-3xl font-bold text-foreground mb-4"
+            placeholder="Section heading..."
+          />
+          <EditableText
+            value={content.description}
+            onChange={(value) => onContentUpdate({ description: value })}
+            as="p"
+            className="text-muted-foreground max-w-2xl mx-auto"
+            placeholder="Section description..."
+          />
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -213,13 +276,25 @@ function ServicesSection({ content }: { content: any }) {
   );
 }
 
-function TherapistsSection({ content }: { content: any }) {
+function TherapistsSection({ content, onContentUpdate }: SectionProps) {
   return (
     <section className="py-16 px-6 bg-background">
       <div className="container mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">{content.description}</p>
+          <EditableText
+            value={content.heading}
+            onChange={(value) => onContentUpdate({ heading: value })}
+            as="h2"
+            className="text-3xl font-bold text-foreground mb-4"
+            placeholder="Section heading..."
+          />
+          <EditableText
+            value={content.description}
+            onChange={(value) => onContentUpdate({ description: value })}
+            as="p"
+            className="text-muted-foreground max-w-2xl mx-auto"
+            placeholder="Section description..."
+          />
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -250,13 +325,25 @@ function TherapistsSection({ content }: { content: any }) {
   );
 }
 
-function GallerySection({ content }: { content: any }) {
+function GallerySection({ content, onContentUpdate }: SectionProps) {
   return (
     <section className="py-16 px-6 bg-muted/50">
       <div className="container mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">{content.description}</p>
+          <EditableText
+            value={content.heading}
+            onChange={(value) => onContentUpdate({ heading: value })}
+            as="h2"
+            className="text-3xl font-bold text-foreground mb-4"
+            placeholder="Section heading..."
+          />
+          <EditableText
+            value={content.description}
+            onChange={(value) => onContentUpdate({ description: value })}
+            as="p"
+            className="text-muted-foreground max-w-2xl mx-auto"
+            placeholder="Section description..."
+          />
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -288,15 +375,25 @@ function GallerySection({ content }: { content: any }) {
   );
 }
 
-function BookingSection({ content }: { content: any }) {
+function BookingSection({ content, onContentUpdate }: SectionProps) {
   return (
     <section className="py-16 px-6 bg-primary text-primary-foreground">
       <div className="container mx-auto max-w-4xl text-center">
         <Calendar className="w-12 h-12 mx-auto mb-6 opacity-80" />
-        <h2 className="text-3xl font-bold mb-4">{content.heading}</h2>
-        <p className="text-lg mb-8 opacity-90">
-          Book a consultation with one of our expert therapists today.
-        </p>
+        <EditableText
+          value={content.heading}
+          onChange={(value) => onContentUpdate({ heading: value })}
+          as="h2"
+          className="text-3xl font-bold mb-4"
+          placeholder="Section heading..."
+        />
+        <EditableText
+          value={content.subheading || "Book a consultation with one of our expert therapists today."}
+          onChange={(value) => onContentUpdate({ subheading: value })}
+          as="p"
+          className="text-lg mb-8 opacity-90"
+          placeholder="Section description..."
+        />
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Button size="lg" className="bg-white text-primary hover:bg-white/90">
             Book Online
@@ -310,15 +407,33 @@ function BookingSection({ content }: { content: any }) {
   );
 }
 
-function AnalyticsSection({ content }: { content: any }) {
+function AnalyticsSection({ content, onContentUpdate }: SectionProps) {
+  const handleStatUpdate = (index: number, field: 'value' | 'label', value: string) => {
+    const newStats = [...(content.stats || [])];
+    newStats[index] = { ...newStats[index], [field]: value };
+    onContentUpdate({ stats: newStats });
+  };
+
   return (
     <section className="py-16 px-6 bg-background">
       <div className="container mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {content.stats?.map((stat: any, index: number) => (
             <div key={index} className="text-center">
-              <p className="text-4xl font-bold text-primary mb-2">{stat.value}</p>
-              <p className="text-muted-foreground">{stat.label}</p>
+              <EditableText
+                value={stat.value}
+                onChange={(value) => handleStatUpdate(index, 'value', value)}
+                as="p"
+                className="text-4xl font-bold text-primary mb-2"
+                placeholder="0"
+              />
+              <EditableText
+                value={stat.label}
+                onChange={(value) => handleStatUpdate(index, 'label', value)}
+                as="p"
+                className="text-muted-foreground"
+                placeholder="Label..."
+              />
             </div>
           ))}
         </div>
@@ -327,14 +442,20 @@ function AnalyticsSection({ content }: { content: any }) {
   );
 }
 
-function TestimonialsSection({ content }: { content: any }) {
+function TestimonialsSection({ content, onContentUpdate }: SectionProps) {
   const featuredReviews = reviews.filter(r => r.approved && r.featured);
 
   return (
     <section className="py-16 px-6 bg-muted/50">
       <div className="container mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
+          <EditableText
+            value={content.heading}
+            onChange={(value) => onContentUpdate({ heading: value })}
+            as="h2"
+            className="text-3xl font-bold text-foreground mb-4"
+            placeholder="Section heading..."
+          />
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -366,12 +487,18 @@ function TestimonialsSection({ content }: { content: any }) {
   );
 }
 
-function PricingSection({ content }: { content: any }) {
+function PricingSection({ content, onContentUpdate }: SectionProps) {
   return (
     <section className="py-16 px-6 bg-background">
       <div className="container mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
+          <EditableText
+            value={content.heading}
+            onChange={(value) => onContentUpdate({ heading: value })}
+            as="h2"
+            className="text-3xl font-bold text-foreground mb-4"
+            placeholder="Section heading..."
+          />
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -401,21 +528,31 @@ function PricingSection({ content }: { content: any }) {
         </div>
 
         {content.disclaimer && (
-          <p className="text-center text-sm text-muted-foreground mt-8 max-w-2xl mx-auto">
-            {content.disclaimer}
-          </p>
+          <EditableText
+            value={content.disclaimer}
+            onChange={(value) => onContentUpdate({ disclaimer: value })}
+            as="p"
+            className="text-center text-sm text-muted-foreground mt-8 max-w-2xl mx-auto"
+            placeholder="Disclaimer text..."
+          />
         )}
       </div>
     </section>
   );
 }
 
-function LearningSection({ content }: { content: any }) {
+function LearningSection({ content, onContentUpdate }: SectionProps) {
   return (
     <section className="py-16 px-6 bg-muted/50">
       <div className="container mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
+          <EditableText
+            value={content.heading}
+            onChange={(value) => onContentUpdate({ heading: value })}
+            as="h2"
+            className="text-3xl font-bold text-foreground mb-4"
+            placeholder="Section heading..."
+          />
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -447,12 +584,18 @@ function LearningSection({ content }: { content: any }) {
   );
 }
 
-function ContactSection({ content }: { content: any }) {
+function ContactSection({ content, onContentUpdate }: SectionProps) {
   return (
     <section className="py-16 px-6 bg-background">
       <div className="container mx-auto max-w-4xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
+          <EditableText
+            value={content.heading}
+            onChange={(value) => onContentUpdate({ heading: value })}
+            as="h2"
+            className="text-3xl font-bold text-foreground mb-4"
+            placeholder="Section heading..."
+          />
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
@@ -503,7 +646,12 @@ function ContactSection({ content }: { content: any }) {
         {content.showParkingInfo && content.parkingInfo && (
           <div className="mt-8 p-4 bg-muted/50 rounded-lg">
             <p className="text-sm text-muted-foreground">
-              <strong>Parking:</strong> {content.parkingInfo}
+              <strong>Parking:</strong>{' '}
+              <EditableText
+                value={content.parkingInfo}
+                onChange={(value) => onContentUpdate({ parkingInfo: value })}
+                placeholder="Parking information..."
+              />
             </p>
           </div>
         )}
@@ -512,7 +660,7 @@ function ContactSection({ content }: { content: any }) {
   );
 }
 
-function FooterSection({ content }: { content: any }) {
+function FooterSection({ content }: SectionProps) {
   return (
     <footer className="py-12 px-6 bg-foreground text-background">
       <div className="container mx-auto">
