@@ -316,11 +316,40 @@ function DefaultContentEditor({ section, updateContent }: { section: any; update
 function StyleEditor({ section, updateStyle }: { section: SiteSection; updateStyle: (id: string, style: Partial<SectionStyle>) => void }) {
   const style = section.style || defaultStyle;
 
+  const presetColors = [
+    { name: 'transparent', value: 'transparent', bg: 'bg-background' },
+    { name: 'primary', value: 'primary', bg: 'bg-primary' },
+    { name: 'secondary', value: 'secondary', bg: 'bg-secondary' },
+    { name: 'muted', value: 'muted', bg: 'bg-muted' },
+    { name: 'accent', value: 'accent', bg: 'bg-accent' },
+  ];
+
+  const fontFamilies = [
+    { name: 'System Default', value: 'system-ui' },
+    { name: 'Inter', value: 'Inter, sans-serif' },
+    { name: 'Poppins', value: 'Poppins, sans-serif' },
+    { name: 'Roboto', value: 'Roboto, sans-serif' },
+    { name: 'Open Sans', value: 'Open Sans, sans-serif' },
+    { name: 'Lato', value: 'Lato, sans-serif' },
+    { name: 'Montserrat', value: 'Montserrat, sans-serif' },
+    { name: 'Playfair Display', value: 'Playfair Display, serif' },
+    { name: 'Merriweather', value: 'Merriweather, serif' },
+    { name: 'Georgia', value: 'Georgia, serif' },
+  ];
+
+  const textColors = [
+    { name: 'Default', value: 'default', preview: 'bg-foreground' },
+    { name: 'Primary', value: 'primary', preview: 'bg-primary' },
+    { name: 'Muted', value: 'muted', preview: 'bg-muted-foreground' },
+    { name: 'White', value: 'white', preview: 'bg-white border border-border' },
+    { name: 'Custom', value: 'custom', preview: '' },
+  ];
+
   return (
     <div className="p-4 space-y-6">
       {/* Background */}
       <div className="space-y-3">
-        <Label className="text-xs font-medium">Background Type</Label>
+        <Label className="text-xs font-medium">Background</Label>
         <Select 
           value={style.backgroundType} 
           onValueChange={(value: 'color' | 'gradient' | 'image') => updateStyle(section.id, { backgroundType: value })}
@@ -334,34 +363,157 @@ function StyleEditor({ section, updateStyle }: { section: SiteSection; updateSty
             <SelectItem value="image">Image</SelectItem>
           </SelectContent>
         </Select>
-        <div className="flex gap-2">
-          <div 
-            className={cn(
-              "w-8 h-8 rounded-md bg-background border-2 cursor-pointer transition-all",
-              style.backgroundColor === 'transparent' ? 'border-primary' : 'border-input'
-            )}
-            onClick={() => updateStyle(section.id, { backgroundColor: 'transparent' })}
-          />
-          <div 
-            className={cn(
-              "w-8 h-8 rounded-md bg-primary cursor-pointer border-2 transition-all",
-              style.backgroundColor === 'primary' ? 'border-foreground' : 'border-transparent'
-            )}
-            onClick={() => updateStyle(section.id, { backgroundColor: 'primary' })}
-          />
-          <div 
-            className={cn(
-              "w-8 h-8 rounded-md bg-secondary cursor-pointer border-2 transition-all",
-              style.backgroundColor === 'secondary' ? 'border-foreground' : 'border-transparent'
-            )}
-            onClick={() => updateStyle(section.id, { backgroundColor: 'secondary' })}
-          />
-          <div 
-            className={cn(
-              "w-8 h-8 rounded-md bg-muted cursor-pointer border-2 transition-all",
-              style.backgroundColor === 'muted' ? 'border-foreground' : 'border-transparent'
-            )}
-            onClick={() => updateStyle(section.id, { backgroundColor: 'muted' })}
+
+        {/* Preset Colors */}
+        <div className="space-y-2">
+          <span className="text-[10px] text-muted-foreground">Preset Colors</span>
+          <div className="flex gap-2 flex-wrap">
+            {presetColors.map((color) => (
+              <button
+                key={color.value}
+                className={cn(
+                  "w-8 h-8 rounded-md cursor-pointer border-2 transition-all",
+                  color.bg,
+                  style.backgroundColor === color.value ? 'border-foreground ring-2 ring-primary/30' : 'border-input hover:border-muted-foreground'
+                )}
+                onClick={() => updateStyle(section.id, { backgroundColor: color.value, customBackgroundColor: undefined })}
+                title={color.name}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Custom Color Picker */}
+        <div className="space-y-2">
+          <span className="text-[10px] text-muted-foreground">Custom Color</span>
+          <div className="flex gap-2 items-center">
+            <div className="relative">
+              <input
+                type="color"
+                value={style.customBackgroundColor || '#ffffff'}
+                onChange={(e) => updateStyle(section.id, { backgroundColor: 'custom', customBackgroundColor: e.target.value })}
+                className="w-10 h-10 rounded-md cursor-pointer border border-input p-0.5"
+              />
+            </div>
+            <Input
+              value={style.customBackgroundColor || ''}
+              onChange={(e) => updateStyle(section.id, { backgroundColor: 'custom', customBackgroundColor: e.target.value })}
+              placeholder="#ffffff"
+              className="text-sm flex-1 font-mono"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Typography */}
+      <div className="space-y-3">
+        <Label className="text-xs font-medium">Typography</Label>
+        
+        {/* Heading Font */}
+        <div className="space-y-1.5">
+          <span className="text-[10px] text-muted-foreground">Heading Font</span>
+          <Select 
+            value={style.headingFontFamily || 'system-ui'} 
+            onValueChange={(value) => updateStyle(section.id, { headingFontFamily: value })}
+          >
+            <SelectTrigger className="text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {fontFamilies.map((font) => (
+                <SelectItem key={font.value} value={font.value} style={{ fontFamily: font.value }}>
+                  {font.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Body Font */}
+        <div className="space-y-1.5">
+          <span className="text-[10px] text-muted-foreground">Body Font</span>
+          <Select 
+            value={style.fontFamily || 'system-ui'} 
+            onValueChange={(value) => updateStyle(section.id, { fontFamily: value })}
+          >
+            <SelectTrigger className="text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {fontFamilies.map((font) => (
+                <SelectItem key={font.value} value={font.value} style={{ fontFamily: font.value }}>
+                  {font.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Font Size */}
+        <div className="space-y-1.5">
+          <span className="text-[10px] text-muted-foreground">Base Font Size</span>
+          <div className="flex gap-1 p-1 bg-muted rounded-lg">
+            <Button 
+              variant={style.fontSize === 'small' ? 'secondary' : 'ghost'} 
+              size="sm" 
+              className="flex-1 text-xs"
+              onClick={() => updateStyle(section.id, { fontSize: 'small' })}
+            >
+              Small
+            </Button>
+            <Button 
+              variant={(!style.fontSize || style.fontSize === 'medium') ? 'secondary' : 'ghost'} 
+              size="sm" 
+              className="flex-1 text-xs"
+              onClick={() => updateStyle(section.id, { fontSize: 'medium' })}
+            >
+              Medium
+            </Button>
+            <Button 
+              variant={style.fontSize === 'large' ? 'secondary' : 'ghost'} 
+              size="sm" 
+              className="flex-1 text-xs"
+              onClick={() => updateStyle(section.id, { fontSize: 'large' })}
+            >
+              Large
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Text Color */}
+      <div className="space-y-3">
+        <Label className="text-xs font-medium">Text Color</Label>
+        <div className="flex gap-2 flex-wrap">
+          {textColors.filter(c => c.value !== 'custom').map((color) => (
+            <button
+              key={color.value}
+              className={cn(
+                "w-8 h-8 rounded-md cursor-pointer border-2 transition-all",
+                color.preview,
+                style.textColor === color.value ? 'border-foreground ring-2 ring-primary/30' : 'border-input hover:border-muted-foreground'
+              )}
+              onClick={() => updateStyle(section.id, { textColor: color.value, customTextColor: undefined })}
+              title={color.name}
+            />
+          ))}
+        </div>
+        
+        {/* Custom Text Color */}
+        <div className="flex gap-2 items-center">
+          <div className="relative">
+            <input
+              type="color"
+              value={style.customTextColor || '#000000'}
+              onChange={(e) => updateStyle(section.id, { textColor: 'custom', customTextColor: e.target.value })}
+              className="w-8 h-8 rounded-md cursor-pointer border border-input p-0.5"
+            />
+          </div>
+          <Input
+            value={style.customTextColor || ''}
+            onChange={(e) => updateStyle(section.id, { textColor: 'custom', customTextColor: e.target.value })}
+            placeholder="#000000"
+            className="text-sm flex-1 font-mono"
           />
         </div>
       </div>
