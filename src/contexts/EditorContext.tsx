@@ -1,16 +1,26 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { EditorState, SiteSection, SectionType } from '@/types/editor';
-import { siteSections as initialSections } from '@/data/mockData';
+import { siteSections as initialSections, cdcData } from '@/data/mockData';
+
+export interface SiteSettings {
+  logo: string;
+  logoPosition: 'left' | 'center' | 'right';
+  logoSize: 'small' | 'medium' | 'large';
+  showLogoInHero: boolean;
+  showLogoInHeader: boolean;
+}
 
 interface EditorContextType {
   state: EditorState;
   sections: SiteSection[];
+  siteSettings: SiteSettings;
   setSelectedSection: (id: string | null) => void;
   setSelectedElement: (id: string | null) => void;
   setPreviewMode: (mode: 'desktop' | 'tablet' | 'mobile') => void;
   setZoom: (zoom: number) => void;
   updateSection: (id: string, updates: Partial<SiteSection>) => void;
   updateSectionContent: (id: string, content: Record<string, any>) => void;
+  updateSiteSettings: (settings: Partial<SiteSettings>) => void;
   reorderSections: (startIndex: number, endIndex: number) => void;
   toggleSectionVisibility: (id: string) => void;
   duplicateSection: (id: string) => void;
@@ -23,6 +33,14 @@ interface EditorContextType {
 
 const EditorContext = createContext<EditorContextType | undefined>(undefined);
 
+const initialSiteSettings: SiteSettings = {
+  logo: cdcData.logo,
+  logoPosition: 'left',
+  logoSize: 'medium',
+  showLogoInHero: true,
+  showLogoInHeader: true,
+};
+
 export function EditorProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<EditorState>({
     selectedSectionId: null,
@@ -34,6 +52,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   });
 
   const [sections, setSections] = useState<SiteSection[]>(initialSections);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(initialSiteSettings);
   const [history, setHistory] = useState<SiteSection[][]>([initialSections]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
@@ -81,6 +100,11 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     });
     setState(prev => ({ ...prev, hasUnsavedChanges: true }));
   }, [pushToHistory]);
+
+  const updateSiteSettings = useCallback((settings: Partial<SiteSettings>) => {
+    setSiteSettings(prev => ({ ...prev, ...settings }));
+    setState(prev => ({ ...prev, hasUnsavedChanges: true }));
+  }, []);
 
   const reorderSections = useCallback((startIndex: number, endIndex: number) => {
     setSections(prev => {
@@ -168,12 +192,14 @@ export function EditorProvider({ children }: { children: ReactNode }) {
       value={{
         state,
         sections,
+        siteSettings,
         setSelectedSection,
         setSelectedElement,
         setPreviewMode,
         setZoom,
         updateSection,
         updateSectionContent,
+        updateSiteSettings,
         reorderSections,
         toggleSectionVisibility,
         duplicateSection,
