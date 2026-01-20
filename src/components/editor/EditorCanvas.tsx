@@ -412,6 +412,19 @@ function AboutSection({ content, onContentUpdate, style = defaultStyle }: Sectio
   const headingStyle: React.CSSProperties = style.headingFontFamily ? { fontFamily: style.headingFontFamily } : {};
   const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
 
+  // Initialize cards if not present
+  const cards = content.cards || [
+    { title: `${content.yearsExperience || 10}+ Years`, subtitle: 'Of Excellence', icon: 'award' },
+    { title: 'Expert Team', subtitle: 'Certified Specialists', icon: 'users' },
+    { title: 'Verified', subtitle: content.manoNiketanVerified ? 'ManoNiketan Certified' : 'Quality Assured', icon: 'check' }
+  ];
+
+  const handleCardUpdate = (index: number, field: 'title' | 'subtitle', value: string) => {
+    const newCards = [...cards];
+    newCards[index] = { ...newCards[index], [field]: value };
+    onContentUpdate({ cards: newCards });
+  };
+
   return (
     <section 
       className={cn("bg-background", bgClass, getFontSizeClass(style.fontSize))}
@@ -420,12 +433,12 @@ function AboutSection({ content, onContentUpdate, style = defaultStyle }: Sectio
       <div className="container mx-auto max-w-4xl">
         <div className={cn("mb-12", textAlignClass)}>
           <EditableText
-            value="About Our Center"
-            onChange={() => {}}
+            value={content.heading || "About Our Center"}
+            onChange={(value) => onContentUpdate({ heading: value })}
             as="h2"
             className="text-3xl font-bold mb-4"
             style={{ ...headingStyle, ...textColorStyle }}
-            disabled
+            placeholder="Section heading..."
           />
           <EditableText
             value={content.mission}
@@ -444,33 +457,67 @@ function AboutSection({ content, onContentUpdate, style = defaultStyle }: Sectio
             </div>
             <h3 className="font-semibold mb-2" style={textColorStyle}>
               <EditableText
-                value={String(content.yearsExperience)}
-                onChange={(value) => onContentUpdate({ yearsExperience: parseInt(value) || 0 })}
-                placeholder="0"
-              />+ Years
+                value={cards[0]?.title || "10+ Years"}
+                onChange={(value) => handleCardUpdate(0, 'title', value)}
+                placeholder="Card title..."
+              />
             </h3>
-            <p className="text-sm text-muted-foreground">Of Excellence</p>
+            <p className="text-sm text-muted-foreground">
+              <EditableText
+                value={cards[0]?.subtitle || "Of Excellence"}
+                onChange={(value) => handleCardUpdate(0, 'subtitle', value)}
+                placeholder="Card subtitle..."
+              />
+            </p>
           </Card>
           <Card className="text-center p-6">
             <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
               <Users className="w-6 h-6 text-accent" />
             </div>
-            <h3 className="font-semibold mb-2" style={textColorStyle}>Expert Team</h3>
-            <p className="text-sm text-muted-foreground">Certified Specialists</p>
+            <h3 className="font-semibold mb-2" style={textColorStyle}>
+              <EditableText
+                value={cards[1]?.title || "Expert Team"}
+                onChange={(value) => handleCardUpdate(1, 'title', value)}
+                placeholder="Card title..."
+              />
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              <EditableText
+                value={cards[1]?.subtitle || "Certified Specialists"}
+                onChange={(value) => handleCardUpdate(1, 'subtitle', value)}
+                placeholder="Card subtitle..."
+              />
+            </p>
           </Card>
           <Card className="text-center p-6">
             <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
               <Check className="w-6 h-6 text-success" />
             </div>
-            <h3 className="font-semibold mb-2" style={textColorStyle}>Verified</h3>
+            <h3 className="font-semibold mb-2" style={textColorStyle}>
+              <EditableText
+                value={cards[2]?.title || "Verified"}
+                onChange={(value) => handleCardUpdate(2, 'title', value)}
+                placeholder="Card title..."
+              />
+            </h3>
             <p className="text-sm text-muted-foreground">
-              {content.manoNiketanVerified ? 'ManoNiketan Certified' : 'Quality Assured'}
+              <EditableText
+                value={cards[2]?.subtitle || "Quality Assured"}
+                onChange={(value) => handleCardUpdate(2, 'subtitle', value)}
+                placeholder="Card subtitle..."
+              />
             </p>
           </Card>
         </div>
 
         <div className="bg-muted rounded-xl p-6">
-          <h3 className="font-semibold mb-3" style={textColorStyle}>Our Philosophy</h3>
+          <h3 className="font-semibold mb-3" style={textColorStyle}>
+            <EditableText
+              value={content.philosophyTitle || "Our Philosophy"}
+              onChange={(value) => onContentUpdate({ philosophyTitle: value })}
+              placeholder="Philosophy title..."
+            />
+          </h3>
           <EditableText
             value={content.philosophy}
             onChange={(value) => onContentUpdate({ philosophy: value })}
@@ -523,18 +570,44 @@ function ServicesSection({ content, onContentUpdate, style = defaultStyle }: Sec
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.filter(s => s.visible).map((service) => {
+          {(content.services || services.filter(s => s.visible)).map((service: any, index: number) => {
             const Icon = iconMap[service.icon] || MessageCircle;
+            
+            const handleServiceUpdate = (field: string, value: string) => {
+              const currentServices = content.services || services.filter(s => s.visible);
+              const newServices = [...currentServices];
+              newServices[index] = { ...newServices[index], [field]: value };
+              onContentUpdate({ services: newServices });
+            };
+
             return (
               <Card key={service.id} className="group hover:shadow-elevated transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                     <Icon className="w-6 h-6" />
                   </div>
-                  <h3 className="font-semibold text-lg mb-2">{service.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">{service.description}</p>
+                  <h3 className="font-semibold text-lg mb-2">
+                    <EditableText
+                      value={service.name}
+                      onChange={(value) => handleServiceUpdate('name', value)}
+                      placeholder="Service name..."
+                    />
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    <EditableText
+                      value={service.description}
+                      onChange={(value) => handleServiceUpdate('description', value)}
+                      placeholder="Service description..."
+                    />
+                  </p>
                   <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="text-xs">{service.ageRange}</Badge>
+                    <Badge variant="secondary" className="text-xs">
+                      <EditableText
+                        value={service.ageRange}
+                        onChange={(value) => handleServiceUpdate('ageRange', value)}
+                        placeholder="Age range..."
+                      />
+                    </Badge>
                     <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
                 </CardContent>
@@ -585,27 +658,54 @@ function TherapistsSection({ content, onContentUpdate, style = defaultStyle }: S
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {therapists.filter(t => t.visible).map((therapist) => (
-            <Card key={therapist.id} className="overflow-hidden group">
-              <div className="aspect-square overflow-hidden">
-                <img
-                  src={therapist.photo}
-                  alt={therapist.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold">{therapist.name}</h3>
-                  <Badge variant={therapist.type === 'in-house' ? 'default' : 'secondary'} className="text-[10px]">
-                    {therapist.type === 'in-house' ? 'In-House' : 'Visiting'}
-                  </Badge>
+          {(content.therapists || therapists.filter(t => t.visible)).map((therapist: any, index: number) => {
+            const handleTherapistUpdate = (field: string, value: string) => {
+              const currentTherapists = content.therapists || therapists.filter(t => t.visible);
+              const newTherapists = [...currentTherapists];
+              newTherapists[index] = { ...newTherapists[index], [field]: value };
+              onContentUpdate({ therapists: newTherapists });
+            };
+
+            return (
+              <Card key={therapist.id} className="overflow-hidden group">
+                <div className="aspect-square overflow-hidden">
+                  <img
+                    src={therapist.photo}
+                    alt={therapist.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
                 </div>
-                <p className="text-sm text-primary font-medium mb-1">{therapist.specialization}</p>
-                <p className="text-xs text-muted-foreground">{therapist.experience} experience</p>
-              </CardContent>
-            </Card>
-          ))}
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold">
+                      <EditableText
+                        value={therapist.name}
+                        onChange={(value) => handleTherapistUpdate('name', value)}
+                        placeholder="Name..."
+                      />
+                    </h3>
+                    <Badge variant={therapist.type === 'in-house' ? 'default' : 'secondary'} className="text-[10px]">
+                      {therapist.type === 'in-house' ? 'In-House' : 'Visiting'}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-primary font-medium mb-1">
+                    <EditableText
+                      value={therapist.specialization}
+                      onChange={(value) => handleTherapistUpdate('specialization', value)}
+                      placeholder="Specialization..."
+                    />
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    <EditableText
+                      value={therapist.experience}
+                      onChange={(value) => handleTherapistUpdate('experience', value)}
+                      placeholder="Experience..."
+                    /> experience
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -709,10 +809,18 @@ function BookingSection({ content, onContentUpdate, style = defaultStyle }: Sect
         />
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Button size="lg" className="bg-white text-primary hover:bg-white/90">
-            Book Online
+            <EditableText
+              value={content.primaryButtonText || "Book Online"}
+              onChange={(value) => onContentUpdate({ primaryButtonText: value })}
+              placeholder="Button text..."
+            />
           </Button>
           <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-            Call Us Now
+            <EditableText
+              value={content.secondaryButtonText || "Call Us Now"}
+              onChange={(value) => onContentUpdate({ secondaryButtonText: value })}
+              placeholder="Button text..."
+            />
           </Button>
         </div>
       </div>
@@ -765,11 +873,19 @@ function AnalyticsSection({ content, onContentUpdate, style = defaultStyle }: Se
 }
 
 function TestimonialsSection({ content, onContentUpdate, style = defaultStyle }: SectionProps) {
-  const featuredReviews = reviews.filter(r => r.approved && r.featured);
   const bgClass = getBackgroundClass(style, 'bg-muted/50');
   const sectionStyles = getSectionStyles(style);
   const headingStyle: React.CSSProperties = style.headingFontFamily ? { fontFamily: style.headingFontFamily } : {};
   const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
+
+  // Use content.testimonials if available, otherwise fall back to featured reviews
+  const testimonials = content.testimonials || reviews.filter(r => r.approved && r.featured);
+
+  const handleTestimonialUpdate = (index: number, field: string, value: any) => {
+    const newTestimonials = [...testimonials];
+    newTestimonials[index] = { ...newTestimonials[index], [field]: value };
+    onContentUpdate({ testimonials: newTestimonials });
+  };
 
   return (
     <section 
@@ -789,25 +905,36 @@ function TestimonialsSection({ content, onContentUpdate, style = defaultStyle }:
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {featuredReviews.map((review) => (
+          {testimonials.map((review: any, index: number) => (
             <Card key={review.id} className="p-6">
               <div className="flex items-center gap-1 mb-4">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
                     className={cn(
-                      'w-4 h-4',
+                      'w-4 h-4 cursor-pointer',
                       i < review.rating ? 'text-warning fill-warning' : 'text-muted'
                     )}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTestimonialUpdate(index, 'rating', i + 1);
+                    }}
                   />
                 ))}
               </div>
-              <p className="text-muted-foreground mb-4 italic">"{review.content}"</p>
+              <p className="text-muted-foreground mb-4 italic">
+                "<EditableText
+                  value={review.content}
+                  onChange={(value) => handleTestimonialUpdate(index, 'content', value)}
+                  placeholder="Testimonial text..."
+                />"
+              </p>
               <p className="text-xs text-muted-foreground">
-                {new Date(review.date).toLocaleDateString('en-US', {
-                  month: 'long',
-                  year: 'numeric',
-                })}
+                <EditableText
+                  value={review.author || new Date(review.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  onChange={(value) => handleTestimonialUpdate(index, 'author', value)}
+                  placeholder="Author or date..."
+                />
               </p>
             </Card>
           ))}
@@ -841,29 +968,71 @@ function PricingSection({ content, onContentUpdate, style = defaultStyle }: Sect
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {pricingPackages.filter(p => p.visible).map((pkg) => (
-            <Card key={pkg.id} className="p-6 hover:shadow-elevated transition-shadow">
-              <Badge variant="secondary" className="mb-4 capitalize">{pkg.type}</Badge>
-              <h3 className="font-semibold text-lg mb-2">{pkg.name}</h3>
-              <p className="text-3xl font-bold text-primary mb-4">
-                ${pkg.price}
-                {pkg.type === 'session' && <span className="text-sm font-normal text-muted-foreground">/session</span>}
-                {pkg.type === 'monthly' && <span className="text-sm font-normal text-muted-foreground">/month</span>}
-              </p>
-              <p className="text-sm text-muted-foreground mb-4">{pkg.description}</p>
-              <ul className="space-y-2 mb-6">
-                {pkg.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <Check className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button className="w-full" variant="outline">
-                {pkg.type === 'custom' ? 'Request Quote' : 'Book Now'}
-              </Button>
-            </Card>
-          ))}
+          {(content.packages || pricingPackages.filter(p => p.visible)).map((pkg: any, index: number) => {
+            const handlePackageUpdate = (field: string, value: any) => {
+              const currentPackages = content.packages || pricingPackages.filter(p => p.visible);
+              const newPackages = [...currentPackages];
+              newPackages[index] = { ...newPackages[index], [field]: value };
+              onContentUpdate({ packages: newPackages });
+            };
+
+            const handleFeatureUpdate = (featureIndex: number, value: string) => {
+              const currentPackages = content.packages || pricingPackages.filter(p => p.visible);
+              const newPackages = [...currentPackages];
+              const newFeatures = [...(newPackages[index].features || [])];
+              newFeatures[featureIndex] = value;
+              newPackages[index] = { ...newPackages[index], features: newFeatures };
+              onContentUpdate({ packages: newPackages });
+            };
+
+            return (
+              <Card key={pkg.id} className="p-6 hover:shadow-elevated transition-shadow">
+                <Badge variant="secondary" className="mb-4 capitalize">{pkg.type}</Badge>
+                <h3 className="font-semibold text-lg mb-2">
+                  <EditableText
+                    value={pkg.name}
+                    onChange={(value) => handlePackageUpdate('name', value)}
+                    placeholder="Package name..."
+                  />
+                </h3>
+                <p className="text-3xl font-bold text-primary mb-4">
+                  $<EditableText
+                    value={String(pkg.price)}
+                    onChange={(value) => handlePackageUpdate('price', parseFloat(value) || 0)}
+                    placeholder="0"
+                  />
+                  {pkg.type === 'session' && <span className="text-sm font-normal text-muted-foreground">/session</span>}
+                  {pkg.type === 'monthly' && <span className="text-sm font-normal text-muted-foreground">/month</span>}
+                </p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  <EditableText
+                    value={pkg.description}
+                    onChange={(value) => handlePackageUpdate('description', value)}
+                    placeholder="Description..."
+                  />
+                </p>
+                <ul className="space-y-2 mb-6">
+                  {pkg.features.map((feature: string, i: number) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <Check className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
+                      <EditableText
+                        value={feature}
+                        onChange={(value) => handleFeatureUpdate(i, value)}
+                        placeholder="Feature..."
+                      />
+                    </li>
+                  ))}
+                </ul>
+                <Button className="w-full" variant="outline">
+                  <EditableText
+                    value={pkg.buttonText || (pkg.type === 'custom' ? 'Request Quote' : 'Book Now')}
+                    onChange={(value) => handlePackageUpdate('buttonText', value)}
+                    placeholder="Button text..."
+                  />
+                </Button>
+              </Card>
+            );
+          })}
         </div>
 
         {content.disclaimer && (
@@ -905,28 +1074,42 @@ function LearningSection({ content, onContentUpdate, style = defaultStyle }: Sec
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {content.modules?.map((module: any) => (
-            <Card key={module.id} className="overflow-hidden group cursor-pointer">
-              <div className="aspect-video overflow-hidden relative">
-                <img
-                  src={module.thumbnail}
-                  alt={module.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                {module.type === 'video' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                    <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-                      <Play className="w-4 h-4 text-foreground ml-0.5" />
+          {content.modules?.map((module: any, index: number) => {
+            const handleModuleUpdate = (field: string, value: string) => {
+              const newModules = [...(content.modules || [])];
+              newModules[index] = { ...newModules[index], [field]: value };
+              onContentUpdate({ modules: newModules });
+            };
+
+            return (
+              <Card key={module.id} className="overflow-hidden group cursor-pointer">
+                <div className="aspect-video overflow-hidden relative">
+                  <img
+                    src={module.thumbnail}
+                    alt={module.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  {module.type === 'video' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                      <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
+                        <Play className="w-4 h-4 text-foreground ml-0.5" />
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-              <CardContent className="p-4">
-                <Badge variant="secondary" className="text-xs mb-2 capitalize">{module.type}</Badge>
-                <h3 className="font-semibold">{module.title}</h3>
-              </CardContent>
-            </Card>
-          ))}
+                  )}
+                </div>
+                <CardContent className="p-4">
+                  <Badge variant="secondary" className="text-xs mb-2 capitalize">{module.type}</Badge>
+                  <h3 className="font-semibold">
+                    <EditableText
+                      value={module.title}
+                      onChange={(value) => handleModuleUpdate('title', value)}
+                      placeholder="Module title..."
+                    />
+                  </h3>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -963,8 +1146,20 @@ function ContactSection({ content, onContentUpdate, style = defaultStyle }: Sect
                 <Phone className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium" style={textColorStyle}>Phone</p>
-                <p className={!getTextColor(style) ? "text-muted-foreground" : ""} style={textColorStyle}>{cdcData.phone}</p>
+                <p className="font-medium" style={textColorStyle}>
+                  <EditableText
+                    value={content.phoneLabel || "Phone"}
+                    onChange={(value) => onContentUpdate({ phoneLabel: value })}
+                    placeholder="Label..."
+                  />
+                </p>
+                <p className={!getTextColor(style) ? "text-muted-foreground" : ""} style={textColorStyle}>
+                  <EditableText
+                    value={content.phone || cdcData.phone}
+                    onChange={(value) => onContentUpdate({ phone: value })}
+                    placeholder="Phone number..."
+                  />
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -972,8 +1167,20 @@ function ContactSection({ content, onContentUpdate, style = defaultStyle }: Sect
                 <Mail className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium" style={textColorStyle}>Email</p>
-                <p className={!getTextColor(style) ? "text-muted-foreground" : ""} style={textColorStyle}>{cdcData.email}</p>
+                <p className="font-medium" style={textColorStyle}>
+                  <EditableText
+                    value={content.emailLabel || "Email"}
+                    onChange={(value) => onContentUpdate({ emailLabel: value })}
+                    placeholder="Label..."
+                  />
+                </p>
+                <p className={!getTextColor(style) ? "text-muted-foreground" : ""} style={textColorStyle}>
+                  <EditableText
+                    value={content.email || cdcData.email}
+                    onChange={(value) => onContentUpdate({ email: value })}
+                    placeholder="Email address..."
+                  />
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -981,8 +1188,20 @@ function ContactSection({ content, onContentUpdate, style = defaultStyle }: Sect
                 <MapPin className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium" style={textColorStyle}>Address</p>
-                <p className={!getTextColor(style) ? "text-muted-foreground" : ""} style={textColorStyle}>{cdcData.address}</p>
+                <p className="font-medium" style={textColorStyle}>
+                  <EditableText
+                    value={content.addressLabel || "Address"}
+                    onChange={(value) => onContentUpdate({ addressLabel: value })}
+                    placeholder="Label..."
+                  />
+                </p>
+                <p className={!getTextColor(style) ? "text-muted-foreground" : ""} style={textColorStyle}>
+                  <EditableText
+                    value={content.address || cdcData.address}
+                    onChange={(value) => onContentUpdate({ address: value })}
+                    placeholder="Address..."
+                  />
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -990,8 +1209,20 @@ function ContactSection({ content, onContentUpdate, style = defaultStyle }: Sect
                 <Clock className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium" style={textColorStyle}>Working Hours</p>
-                <p className={!getTextColor(style) ? "text-muted-foreground" : ""} style={textColorStyle}>{cdcData.workingHours}</p>
+                <p className="font-medium" style={textColorStyle}>
+                  <EditableText
+                    value={content.hoursLabel || "Working Hours"}
+                    onChange={(value) => onContentUpdate({ hoursLabel: value })}
+                    placeholder="Label..."
+                  />
+                </p>
+                <p className={!getTextColor(style) ? "text-muted-foreground" : ""} style={textColorStyle}>
+                  <EditableText
+                    value={content.workingHours || cdcData.workingHours}
+                    onChange={(value) => onContentUpdate({ workingHours: value })}
+                    placeholder="Working hours..."
+                  />
+                </p>
               </div>
             </div>
           </div>
@@ -1018,10 +1249,37 @@ function ContactSection({ content, onContentUpdate, style = defaultStyle }: Sect
   );
 }
 
-function FooterSection({ content, style = defaultStyle }: SectionProps) {
+function FooterSection({ content, onContentUpdate, style = defaultStyle }: SectionProps) {
   const sectionStyles = getSectionStyles(style);
   const textColorStyle: React.CSSProperties = getTextColor(style) ? { color: getTextColor(style) } : {};
   const hasCustomBg = style.backgroundColor === 'custom' && style.customBackgroundColor;
+
+  // Initialize footer links if not present
+  const quickLinks = content.quickLinks || [
+    { text: 'About Us', href: '#' },
+    { text: 'Services', href: '#' },
+    { text: 'Our Team', href: '#' },
+    { text: 'Contact', href: '#' }
+  ];
+
+  const serviceLinks = content.serviceLinks || [
+    { text: 'Speech Therapy', href: '#' },
+    { text: 'Occupational Therapy', href: '#' },
+    { text: 'Behavioral Therapy', href: '#' },
+    { text: 'Early Intervention', href: '#' }
+  ];
+
+  const legalLinks = content.legalLinks || [
+    { text: 'Privacy Policy', href: '#' },
+    { text: 'Terms of Service', href: '#' },
+    { text: 'HIPAA Compliance', href: '#' }
+  ];
+
+  const handleLinkUpdate = (section: 'quickLinks' | 'serviceLinks' | 'legalLinks', index: number, value: string) => {
+    const links = section === 'quickLinks' ? [...quickLinks] : section === 'serviceLinks' ? [...serviceLinks] : [...legalLinks];
+    links[index] = { ...links[index], text: value };
+    onContentUpdate({ [section]: links });
+  };
 
   return (
     <footer 
@@ -1036,50 +1294,116 @@ function FooterSection({ content, style = defaultStyle }: SectionProps) {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">BH</span>
+                <span className="text-primary-foreground font-bold text-sm">
+                  <EditableText
+                    value={content.logoText || "BH"}
+                    onChange={(value) => onContentUpdate({ logoText: value })}
+                    placeholder="Logo"
+                  />
+                </span>
               </div>
-              <span className="font-semibold" style={textColorStyle}>{cdcData.name}</span>
+              <span className="font-semibold" style={textColorStyle}>
+                <EditableText
+                  value={content.companyName || cdcData.name}
+                  onChange={(value) => onContentUpdate({ companyName: value })}
+                  placeholder="Company name..."
+                />
+              </span>
             </div>
-            <p className="text-sm opacity-70" style={textColorStyle}>{cdcData.tagline}</p>
+            <p className="text-sm opacity-70" style={textColorStyle}>
+              <EditableText
+                value={content.tagline || cdcData.tagline}
+                onChange={(value) => onContentUpdate({ tagline: value })}
+                placeholder="Tagline..."
+              />
+            </p>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4" style={textColorStyle}>Quick Links</h4>
+            <h4 className="font-semibold mb-4" style={textColorStyle}>
+              <EditableText
+                value={content.quickLinksTitle || "Quick Links"}
+                onChange={(value) => onContentUpdate({ quickLinksTitle: value })}
+                placeholder="Section title..."
+              />
+            </h4>
             <ul className="space-y-2 text-sm opacity-70">
-              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>About Us</a></li>
-              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Services</a></li>
-              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Our Team</a></li>
-              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Contact</a></li>
+              {quickLinks.map((link: any, index: number) => (
+                <li key={index}>
+                  <a href={link.href} className="hover:opacity-100" style={textColorStyle}>
+                    <EditableText
+                      value={link.text}
+                      onChange={(value) => handleLinkUpdate('quickLinks', index, value)}
+                      placeholder="Link text..."
+                    />
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4" style={textColorStyle}>Services</h4>
+            <h4 className="font-semibold mb-4" style={textColorStyle}>
+              <EditableText
+                value={content.servicesTitle || "Services"}
+                onChange={(value) => onContentUpdate({ servicesTitle: value })}
+                placeholder="Section title..."
+              />
+            </h4>
             <ul className="space-y-2 text-sm opacity-70">
-              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Speech Therapy</a></li>
-              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Occupational Therapy</a></li>
-              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Behavioral Therapy</a></li>
-              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Early Intervention</a></li>
+              {serviceLinks.map((link: any, index: number) => (
+                <li key={index}>
+                  <a href={link.href} className="hover:opacity-100" style={textColorStyle}>
+                    <EditableText
+                      value={link.text}
+                      onChange={(value) => handleLinkUpdate('serviceLinks', index, value)}
+                      placeholder="Link text..."
+                    />
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4" style={textColorStyle}>Legal</h4>
+            <h4 className="font-semibold mb-4" style={textColorStyle}>
+              <EditableText
+                value={content.legalTitle || "Legal"}
+                onChange={(value) => onContentUpdate({ legalTitle: value })}
+                placeholder="Section title..."
+              />
+            </h4>
             <ul className="space-y-2 text-sm opacity-70">
-              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Privacy Policy</a></li>
-              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>Terms of Service</a></li>
-              <li><a href="#" className="hover:opacity-100" style={textColorStyle}>HIPAA Compliance</a></li>
+              {legalLinks.map((link: any, index: number) => (
+                <li key={index}>
+                  <a href={link.href} className="hover:opacity-100" style={textColorStyle}>
+                    <EditableText
+                      value={link.text}
+                      onChange={(value) => handleLinkUpdate('legalLinks', index, value)}
+                      placeholder="Link text..."
+                    />
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
 
         <div className="pt-8 border-t border-background/20 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm opacity-70" style={textColorStyle}>
-            © {new Date().getFullYear()} {cdcData.name}. All rights reserved.
+            <EditableText
+              value={content.copyright || `© ${new Date().getFullYear()} ${cdcData.name}. All rights reserved.`}
+              onChange={(value) => onContentUpdate({ copyright: value })}
+              placeholder="Copyright text..."
+            />
           </p>
           {content.manoNiketanBranding && (
             <Badge variant="secondary" className="bg-primary/20 text-primary-foreground">
-              Powered by ManoNiketan
+              <EditableText
+                value={content.brandingText || "Powered by ManoNiketan"}
+                onChange={(value) => onContentUpdate({ brandingText: value })}
+                placeholder="Branding text..."
+              />
             </Badge>
           )}
         </div>
