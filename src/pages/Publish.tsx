@@ -2,22 +2,51 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { versionHistory, siteSections, therapists, services, galleryItems, reviews, pricingPackages, cdcData } from '@/data/mockData';
 import { Eye, Upload, History, Clock, Check, Calendar, Monitor, Tablet, Smartphone, Star, MapPin, Phone, Mail, MessageCircle, Play, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 type PreviewMode = 'desktop' | 'tablet' | 'mobile';
 
 export default function PublishPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [scheduleTimezone, setScheduleTimezone] = useState('America/New_York');
 
   const previewModes = [
     { mode: 'desktop' as const, icon: Monitor, label: 'Desktop' },
     { mode: 'tablet' as const, icon: Tablet, label: 'Tablet' },
     { mode: 'mobile' as const, icon: Smartphone, label: 'Mobile' },
   ];
+
+  const timezones = [
+    { value: 'America/New_York', label: 'Eastern Time (ET)' },
+    { value: 'America/Chicago', label: 'Central Time (CT)' },
+    { value: 'America/Denver', label: 'Mountain Time (MT)' },
+    { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
+    { value: 'Europe/London', label: 'London (GMT)' },
+    { value: 'Europe/Paris', label: 'Paris (CET)' },
+    { value: 'Asia/Kolkata', label: 'India (IST)' },
+  ];
+
+  const handleSchedulePublish = () => {
+    if (!scheduleDate || !scheduleTime) {
+      toast.error('Please select both date and time');
+      return;
+    }
+    toast.success(`Publish scheduled for ${scheduleDate} at ${scheduleTime}`);
+    setScheduleOpen(false);
+    setScheduleDate('');
+    setScheduleTime('');
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -66,15 +95,88 @@ export default function PublishPage() {
                 <Check className="w-4 h-4" />All checks passed
               </p>
             </div>
-            <Button className="w-full gap-2">
+            <Button className="w-full gap-2" onClick={() => toast.success('Site published successfully!')}>
               <Upload className="w-4 h-4" />Publish Now
             </Button>
-            <Button variant="outline" className="w-full gap-2">
+            <Button variant="outline" className="w-full gap-2" onClick={() => setScheduleOpen(true)}>
               <Calendar className="w-4 h-4" />Schedule Publish
             </Button>
           </CardContent>
         </Card>
       </div>
+
+      {/* Schedule Publish Dialog */}
+      <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Schedule Publish
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="schedule-date">Publish Date</Label>
+              <Input
+                id="schedule-date"
+                type="date"
+                value={scheduleDate}
+                onChange={(e) => setScheduleDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="schedule-time">Publish Time</Label>
+              <Input
+                id="schedule-time"
+                type="time"
+                value={scheduleTime}
+                onChange={(e) => setScheduleTime(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="schedule-timezone">Timezone</Label>
+              <Select value={scheduleTimezone} onValueChange={setScheduleTimezone}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timezones.map((tz) => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {scheduleDate && scheduleTime && (
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  Your site will be published on{' '}
+                  <span className="font-medium text-foreground">
+                    {new Date(scheduleDate).toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </span>{' '}
+                  at <span className="font-medium text-foreground">{scheduleTime}</span>
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setScheduleOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSchedulePublish}>
+              <Calendar className="w-4 h-4 mr-2" />
+              Schedule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader>
