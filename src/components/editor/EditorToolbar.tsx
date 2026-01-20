@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useEditor } from '@/contexts/EditorContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,7 @@ import {
   History,
   MoreHorizontal,
   ImageIcon,
+  X,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -44,6 +45,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { toast } from '@/hooks/use-toast';
 
 export function EditorToolbar() {
   const {
@@ -60,12 +62,75 @@ export function EditorToolbar() {
 
   const [logoDialogOpen, setLogoDialogOpen] = useState(false);
   const [tempLogoUrl, setTempLogoUrl] = useState(siteSettings.logo);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const zoomLevels = [50, 75, 100, 125, 150, 200];
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: 'Invalid file type',
+        description: 'Please upload a PNG, JPG, SVG, WebP, or GIF image.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: 'File too large',
+        description: 'Please upload an image smaller than 2MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      setTempLogoUrl(dataUrl);
+      setIsUploading(false);
+      toast({
+        title: 'Logo uploaded',
+        description: 'Your logo has been uploaded successfully.',
+      });
+    };
+    reader.onerror = () => {
+      setIsUploading(false);
+      toast({
+        title: 'Upload failed',
+        description: 'Failed to read the file. Please try again.',
+        variant: 'destructive',
+      });
+    };
+    reader.readAsDataURL(file);
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setTempLogoUrl('');
+  };
 
   const handleSaveLogo = () => {
     updateSiteSettings({ logo: tempLogoUrl });
     setLogoDialogOpen(false);
+    toast({
+      title: 'Logo saved',
+      description: 'Your logo settings have been updated.',
+    });
   };
 
   return (
@@ -276,13 +341,23 @@ export function EditorToolbar() {
           <div className="space-y-4 py-4">
             {/* Logo Preview */}
             <div className="flex justify-center">
-              <div className="w-32 h-32 border border-dashed border-editor-border rounded-lg flex items-center justify-center bg-muted overflow-hidden">
+              <div className="relative w-32 h-32 border border-dashed border-editor-border rounded-lg flex items-center justify-center bg-muted overflow-hidden group">
                 {tempLogoUrl && tempLogoUrl !== '/placeholder.svg' ? (
-                  <img 
-                    src={tempLogoUrl} 
-                    alt="Logo preview" 
-                    className="max-w-full max-h-full object-contain"
-                  />
+                  <>
+                    <img 
+                      src={tempLogoUrl} 
+                      alt="Logo preview" 
+                      className="max-w-full max-h-full object-contain"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-1 right-1 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={handleRemoveLogo}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </>
                 ) : (
                   <div className="text-center p-4">
                     <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
@@ -302,18 +377,36 @@ export function EditorToolbar() {
                 className="text-sm"
               />
               <p className="text-[10px] text-muted-foreground">
-                Enter a URL or upload an image
+                Enter a URL or upload an image below
               </p>
             </div>
 
-            {/* Upload Button */}
-            <div className="border border-dashed border-editor-border rounded-lg p-4 text-center hover:bg-editor-hover transition-colors cursor-pointer">
-              <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+            {/* File Upload */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <div 
+              className={cn(
+                "border border-dashed border-editor-border rounded-lg p-4 text-center transition-colors cursor-pointer",
+                isUploading 
+                  ? "bg-primary/5 border-primary" 
+                  : "hover:bg-editor-hover hover:border-primary/50"
+              )}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className={cn(
+                "w-6 h-6 mx-auto mb-2",
+                isUploading ? "text-primary animate-pulse" : "text-muted-foreground"
+              )} />
               <p className="text-xs text-muted-foreground">
-                Click to upload logo
+                {isUploading ? 'Uploading...' : 'Click to upload logo'}
               </p>
               <p className="text-[10px] text-muted-foreground mt-1">
-                Recommended: 200×60px, PNG or SVG
+                PNG, JPG, SVG, WebP • Max 2MB
               </p>
             </div>
 
