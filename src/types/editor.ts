@@ -17,8 +17,14 @@ export interface SectionStyle {
   paddingRight: number;
   textAlign: 'left' | 'center' | 'right';
   backgroundColor: string;
+  customBackgroundColor?: string;
   backgroundType: 'color' | 'gradient' | 'image';
   backgroundImage?: string;
+  fontFamily?: string;
+  headingFontFamily?: string;
+  fontSize?: 'small' | 'medium' | 'large';
+  textColor?: string;
+  customTextColor?: string;
 }
 
 export interface SiteSection {
