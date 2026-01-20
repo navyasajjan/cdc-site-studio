@@ -1,0 +1,573 @@
+import { useEditor } from '@/contexts/EditorContext';
+import { cn } from '@/lib/utils';
+import { cdcData, services, therapists, galleryItems, reviews, pricingPackages } from '@/data/mockData';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  MessageCircle,
+  Hand,
+  Brain,
+  Baby,
+  Sparkles,
+  Users,
+  Phone,
+  Mail,
+  MapPin,
+  Star,
+  Check,
+  Play,
+  ChevronRight,
+  Award,
+  Clock,
+  Calendar,
+} from 'lucide-react';
+
+const iconMap: Record<string, React.ElementType> = {
+  MessageCircle,
+  Hand,
+  Brain,
+  Baby,
+  Sparkles,
+  Users,
+};
+
+export function EditorCanvas() {
+  const { sections, state, setSelectedSection } = useEditor();
+
+  const previewClasses = cn(
+    'transition-all duration-300 bg-white mx-auto shadow-elevated rounded-lg overflow-hidden',
+    state.previewMode === 'desktop' && 'w-full max-w-[1200px]',
+    state.previewMode === 'tablet' && 'w-[768px]',
+    state.previewMode === 'mobile' && 'w-[375px]'
+  );
+
+  const visibleSections = sections.filter(s => s.visible).sort((a, b) => a.order - b.order);
+
+  return (
+    <div
+      className="flex-1 overflow-auto p-6 bg-editor-canvas"
+      style={{ transform: `scale(${state.zoom / 100})`, transformOrigin: 'top center' }}
+    >
+      <div className={previewClasses}>
+        {visibleSections.map((section) => (
+          <div
+            key={section.id}
+            className={cn(
+              'relative group cursor-pointer transition-all duration-200',
+              state.selectedSectionId === section.id && 'ring-2 ring-primary ring-offset-2'
+            )}
+            onClick={() => setSelectedSection(section.id)}
+          >
+            {/* Section Overlay on Hover */}
+            <div className={cn(
+              'absolute inset-0 z-10 border-2 border-transparent transition-colors pointer-events-none',
+              'group-hover:border-primary/50',
+              state.selectedSectionId === section.id && 'border-primary'
+            )} />
+
+            {/* Section Label */}
+            <div className={cn(
+              'absolute top-2 left-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity',
+              state.selectedSectionId === section.id && 'opacity-100'
+            )}>
+              <Badge variant="secondary" className="bg-primary text-primary-foreground text-[10px]">
+                {section.title}
+              </Badge>
+            </div>
+
+            {/* Render Section Content */}
+            {section.type === 'hero' && <HeroSection content={section.content} />}
+            {section.type === 'about' && <AboutSection content={section.content} />}
+            {section.type === 'services' && <ServicesSection content={section.content} />}
+            {section.type === 'therapists' && <TherapistsSection content={section.content} />}
+            {section.type === 'gallery' && <GallerySection content={section.content} />}
+            {section.type === 'booking' && <BookingSection content={section.content} />}
+            {section.type === 'analytics' && <AnalyticsSection content={section.content} />}
+            {section.type === 'testimonials' && <TestimonialsSection content={section.content} />}
+            {section.type === 'pricing' && <PricingSection content={section.content} />}
+            {section.type === 'learning' && <LearningSection content={section.content} />}
+            {section.type === 'contact' && <ContactSection content={section.content} />}
+            {section.type === 'footer' && <FooterSection content={section.content} />}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HeroSection({ content }: { content: any }) {
+  return (
+    <section
+      className="relative min-h-[500px] flex items-center justify-center bg-cover bg-center"
+      style={{
+        backgroundImage: content.backgroundImage
+          ? `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${content.backgroundImage})`
+          : 'linear-gradient(135deg, hsl(174 58% 39%) 0%, hsl(174 58% 50%) 100%)',
+      }}
+    >
+      <div className="container mx-auto px-6 text-center text-white">
+        <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+          {content.headline}
+        </h1>
+        <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto opacity-90">
+          {content.subheadline}
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          {content.ctas?.map((cta: any, index: number) => (
+            <Button
+              key={index}
+              variant={cta.style === 'primary' ? 'default' : cta.style === 'outline' ? 'outline' : 'secondary'}
+              size="lg"
+              className={cn(
+                cta.style === 'primary' && 'bg-accent hover:bg-accent/90',
+                cta.style === 'outline' && 'border-white text-white hover:bg-white/10'
+              )}
+            >
+              {cta.text}
+            </Button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AboutSection({ content }: { content: any }) {
+  return (
+    <section className="py-16 px-6 bg-background">
+      <div className="container mx-auto max-w-4xl">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-foreground mb-4">About Our Center</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            {content.mission}
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
+          <Card className="text-center p-6">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Award className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="font-semibold mb-2">{content.yearsExperience}+ Years</h3>
+            <p className="text-sm text-muted-foreground">Of Excellence</p>
+          </Card>
+          <Card className="text-center p-6">
+            <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+              <Users className="w-6 h-6 text-accent" />
+            </div>
+            <h3 className="font-semibold mb-2">Expert Team</h3>
+            <p className="text-sm text-muted-foreground">Certified Specialists</p>
+          </Card>
+          <Card className="text-center p-6">
+            <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
+              <Check className="w-6 h-6 text-success" />
+            </div>
+            <h3 className="font-semibold mb-2">Verified</h3>
+            <p className="text-sm text-muted-foreground">
+              {content.manoNiketanVerified ? 'ManoNiketan Certified' : 'Quality Assured'}
+            </p>
+          </Card>
+        </div>
+
+        <div className="bg-muted rounded-xl p-6">
+          <h3 className="font-semibold mb-3">Our Philosophy</h3>
+          <p className="text-muted-foreground">{content.philosophy}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ServicesSection({ content }: { content: any }) {
+  return (
+    <section className="py-16 px-6 bg-muted/50">
+      <div className="container mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">{content.description}</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {services.filter(s => s.visible).map((service) => {
+            const Icon = iconMap[service.icon] || MessageCircle;
+            return (
+              <Card key={service.id} className="group hover:shadow-elevated transition-all duration-300">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-semibold text-lg mb-2">{service.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{service.description}</p>
+                  <div className="flex items-center justify-between">
+                    <Badge variant="secondary" className="text-xs">{service.ageRange}</Badge>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TherapistsSection({ content }: { content: any }) {
+  return (
+    <section className="py-16 px-6 bg-background">
+      <div className="container mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">{content.description}</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {therapists.filter(t => t.visible).map((therapist) => (
+            <Card key={therapist.id} className="overflow-hidden group">
+              <div className="aspect-square overflow-hidden">
+                <img
+                  src={therapist.photo}
+                  alt={therapist.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-semibold">{therapist.name}</h3>
+                  <Badge variant={therapist.type === 'in-house' ? 'default' : 'secondary'} className="text-[10px]">
+                    {therapist.type === 'in-house' ? 'In-House' : 'Visiting'}
+                  </Badge>
+                </div>
+                <p className="text-sm text-primary font-medium mb-1">{therapist.specialization}</p>
+                <p className="text-xs text-muted-foreground">{therapist.experience} experience</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function GallerySection({ content }: { content: any }) {
+  return (
+    <section className="py-16 px-6 bg-muted/50">
+      <div className="container mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">{content.description}</p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {galleryItems.map((item) => (
+            <div
+              key={item.id}
+              className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer"
+            >
+              <img
+                src={item.url}
+                alt={item.alt}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              {item.type === 'video' && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                  <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+                    <Play className="w-5 h-5 text-foreground ml-0.5" />
+                  </div>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                <p className="absolute bottom-3 left-3 text-white text-sm font-medium">{item.alt}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BookingSection({ content }: { content: any }) {
+  return (
+    <section className="py-16 px-6 bg-primary text-primary-foreground">
+      <div className="container mx-auto max-w-4xl text-center">
+        <Calendar className="w-12 h-12 mx-auto mb-6 opacity-80" />
+        <h2 className="text-3xl font-bold mb-4">{content.heading}</h2>
+        <p className="text-lg mb-8 opacity-90">
+          Book a consultation with one of our expert therapists today.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <Button size="lg" className="bg-white text-primary hover:bg-white/90">
+            Book Online
+          </Button>
+          <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+            Call Us Now
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AnalyticsSection({ content }: { content: any }) {
+  return (
+    <section className="py-16 px-6 bg-background">
+      <div className="container mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {content.stats?.map((stat: any, index: number) => (
+            <div key={index} className="text-center">
+              <p className="text-4xl font-bold text-primary mb-2">{stat.value}</p>
+              <p className="text-muted-foreground">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TestimonialsSection({ content }: { content: any }) {
+  const featuredReviews = reviews.filter(r => r.approved && r.featured);
+
+  return (
+    <section className="py-16 px-6 bg-muted/50">
+      <div className="container mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {featuredReviews.map((review) => (
+            <Card key={review.id} className="p-6">
+              <div className="flex items-center gap-1 mb-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={cn(
+                      'w-4 h-4',
+                      i < review.rating ? 'text-warning fill-warning' : 'text-muted'
+                    )}
+                  />
+                ))}
+              </div>
+              <p className="text-muted-foreground mb-4 italic">"{review.content}"</p>
+              <p className="text-xs text-muted-foreground">
+                {new Date(review.date).toLocaleDateString('en-US', {
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </p>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PricingSection({ content }: { content: any }) {
+  return (
+    <section className="py-16 px-6 bg-background">
+      <div className="container mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {pricingPackages.filter(p => p.visible).map((pkg) => (
+            <Card key={pkg.id} className="p-6 hover:shadow-elevated transition-shadow">
+              <Badge variant="secondary" className="mb-4 capitalize">{pkg.type}</Badge>
+              <h3 className="font-semibold text-lg mb-2">{pkg.name}</h3>
+              <p className="text-3xl font-bold text-primary mb-4">
+                ${pkg.price}
+                {pkg.type === 'session' && <span className="text-sm font-normal text-muted-foreground">/session</span>}
+                {pkg.type === 'monthly' && <span className="text-sm font-normal text-muted-foreground">/month</span>}
+              </p>
+              <p className="text-sm text-muted-foreground mb-4">{pkg.description}</p>
+              <ul className="space-y-2 mb-6">
+                {pkg.features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <Check className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button className="w-full" variant="outline">
+                {pkg.type === 'custom' ? 'Request Quote' : 'Book Now'}
+              </Button>
+            </Card>
+          ))}
+        </div>
+
+        {content.disclaimer && (
+          <p className="text-center text-sm text-muted-foreground mt-8 max-w-2xl mx-auto">
+            {content.disclaimer}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function LearningSection({ content }: { content: any }) {
+  return (
+    <section className="py-16 px-6 bg-muted/50">
+      <div className="container mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {content.modules?.map((module: any) => (
+            <Card key={module.id} className="overflow-hidden group cursor-pointer">
+              <div className="aspect-video overflow-hidden relative">
+                <img
+                  src={module.thumbnail}
+                  alt={module.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                {module.type === 'video' && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                    <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
+                      <Play className="w-4 h-4 text-foreground ml-0.5" />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <CardContent className="p-4">
+                <Badge variant="secondary" className="text-xs mb-2 capitalize">{module.type}</Badge>
+                <h3 className="font-semibold">{module.title}</h3>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ContactSection({ content }: { content: any }) {
+  return (
+    <section className="py-16 px-6 bg-background">
+      <div className="container mx-auto max-w-4xl">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-foreground mb-4">{content.heading}</h2>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Phone className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium">Phone</p>
+                <p className="text-muted-foreground">{cdcData.phone}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Mail className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium">Email</p>
+                <p className="text-muted-foreground">{cdcData.email}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <MapPin className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium">Address</p>
+                <p className="text-muted-foreground">{cdcData.address}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Clock className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium">Working Hours</p>
+                <p className="text-muted-foreground">{cdcData.workingHours}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-muted rounded-xl h-[300px] flex items-center justify-center">
+            <p className="text-muted-foreground">Google Maps Embed</p>
+          </div>
+        </div>
+
+        {content.showParkingInfo && content.parkingInfo && (
+          <div className="mt-8 p-4 bg-muted/50 rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              <strong>Parking:</strong> {content.parkingInfo}
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function FooterSection({ content }: { content: any }) {
+  return (
+    <footer className="py-12 px-6 bg-foreground text-background">
+      <div className="container mx-auto">
+        <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">BH</span>
+              </div>
+              <span className="font-semibold">{cdcData.name}</span>
+            </div>
+            <p className="text-sm opacity-70">{cdcData.tagline}</p>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-4">Quick Links</h4>
+            <ul className="space-y-2 text-sm opacity-70">
+              <li><a href="#" className="hover:opacity-100">About Us</a></li>
+              <li><a href="#" className="hover:opacity-100">Services</a></li>
+              <li><a href="#" className="hover:opacity-100">Our Team</a></li>
+              <li><a href="#" className="hover:opacity-100">Contact</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-4">Services</h4>
+            <ul className="space-y-2 text-sm opacity-70">
+              <li><a href="#" className="hover:opacity-100">Speech Therapy</a></li>
+              <li><a href="#" className="hover:opacity-100">Occupational Therapy</a></li>
+              <li><a href="#" className="hover:opacity-100">Behavioral Therapy</a></li>
+              <li><a href="#" className="hover:opacity-100">Early Intervention</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-4">Legal</h4>
+            <ul className="space-y-2 text-sm opacity-70">
+              <li><a href="#" className="hover:opacity-100">Privacy Policy</a></li>
+              <li><a href="#" className="hover:opacity-100">Terms of Service</a></li>
+              <li><a href="#" className="hover:opacity-100">HIPAA Compliance</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="pt-8 border-t border-background/20 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-sm opacity-70">
+            © {new Date().getFullYear()} {cdcData.name}. All rights reserved.
+          </p>
+          {content.manoNiketanBranding && (
+            <Badge variant="secondary" className="bg-primary/20 text-primary-foreground">
+              Powered by ManoNiketan
+            </Badge>
+          )}
+        </div>
+      </div>
+    </footer>
+  );
+}
