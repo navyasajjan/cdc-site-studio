@@ -220,8 +220,8 @@ export default function PublishPage() {
 
       {/* Preview Modal - Now uses live EditorContext data */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-[95vw] h-[90vh] p-0 overflow-hidden">
-          <DialogHeader className="p-4 border-b bg-muted/50 flex flex-row items-center justify-between">
+        <DialogContent className="max-w-[95vw] h-[90vh] p-0 overflow-hidden flex flex-col">
+          <DialogHeader className="p-4 border-b bg-muted/50 flex flex-row items-center justify-between flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Eye className="w-5 h-5" />
               Site Preview
@@ -247,7 +247,7 @@ export default function PublishPage() {
             </div>
           </DialogHeader>
           
-          <div className="flex-1 overflow-auto bg-editor-canvas p-6 flex justify-center">
+          <div className="flex-1 overflow-auto bg-editor-canvas p-6 flex justify-center min-h-0">
             <div
               className={cn(
                 'bg-white shadow-elevated rounded-lg overflow-auto transition-all duration-300',
@@ -255,7 +255,6 @@ export default function PublishPage() {
                 previewMode === 'tablet' && 'w-[768px]',
                 previewMode === 'mobile' && 'w-[375px]'
               )}
-              style={{ height: 'calc(90vh - 80px)' }}
             >
               {/* Use SitePreview component with live EditorContext data */}
               <SitePreview 
