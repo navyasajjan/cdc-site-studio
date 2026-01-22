@@ -17,6 +17,7 @@ import SEO from "./pages/SEO";
 import Publish from "./pages/Publish";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import Staff from "./pages/Staff";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/seo" element={<DashboardLayout><SEO /></DashboardLayout>} />
           <Route path="/publish" element={<DashboardLayout><Publish /></DashboardLayout>} />
           <Route path="/analytics" element={<DashboardLayout><Analytics /></DashboardLayout>} />
+          <Route path="/staff" element={<DashboardLayout><Staff /></DashboardLayout>} />
           <Route path="/settings" element={<DashboardLayout><Settings /></DashboardLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
