@@ -20,10 +20,28 @@ import {
   MapPin,
   BarChart3,
   Layout,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SectionType } from '@/types/editor';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const sectionIcons: Record<SectionType, React.ElementType> = {
   hero: Layout,
@@ -40,15 +58,45 @@ const sectionIcons: Record<SectionType, React.ElementType> = {
   footer: Layout,
 };
 
+const sectionLabels: Record<SectionType, string> = {
+  hero: 'Hero Section',
+  about: 'About Section',
+  services: 'Services Section',
+  therapists: 'Therapists Section',
+  gallery: 'Gallery Section',
+  booking: 'Booking Section',
+  analytics: 'Analytics Section',
+  testimonials: 'Testimonials Section',
+  pricing: 'Pricing Section',
+  learning: 'Learning Hub Section',
+  contact: 'Contact Section',
+  footer: 'Footer Section',
+};
+
 interface SectionNavigatorProps {
   onScrollToSection?: (sectionId: string) => void;
 }
 
 export function SectionNavigator({ onScrollToSection }: SectionNavigatorProps) {
-  const { sections, state, setSelectedSection, toggleSectionVisibility, duplicateSection, reorderSections } = useEditor();
+  const { sections, state, setSelectedSection, toggleSectionVisibility, duplicateSection, reorderSections, addSection, deleteSection } = useEditor();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['section-hero', 'section-services']));
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [sectionToDelete, setSectionToDelete] = useState<string | null>(null);
+
+  const handleDeleteClick = (id: string) => {
+    setSectionToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (sectionToDelete) {
+      deleteSection(sectionToDelete);
+    }
+    setDeleteDialogOpen(false);
+    setSectionToDelete(null);
+  };
 
   const toggleExpanded = (id: string) => {
     setExpandedSections(prev => {
@@ -81,11 +129,41 @@ export function SectionNavigator({ onScrollToSection }: SectionNavigatorProps) {
     setDragOverIndex(null);
   };
 
+  const availableSectionTypes: SectionType[] = [
+    'hero', 'about', 'services', 'therapists', 'gallery', 
+    'booking', 'analytics', 'testimonials', 'pricing', 'learning', 'contact', 'footer'
+  ];
+
   return (
     <div className="h-full flex flex-col bg-editor-panel border-r border-editor-border">
       {/* Header */}
       <div className="p-4 border-b border-editor-border">
-        <h3 className="font-semibold text-sm text-foreground">Sections</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-sm text-foreground">Sections</h3>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 gap-1">
+                <Plus className="w-3.5 h-3.5" />
+                Add
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {availableSectionTypes.map((type) => {
+                const Icon = sectionIcons[type];
+                return (
+                  <DropdownMenuItem
+                    key={type}
+                    onClick={() => addSection(type)}
+                    className="gap-2"
+                  >
+                    <Icon className="w-4 h-4" />
+                    {sectionLabels[type]}
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         <p className="text-xs text-muted-foreground mt-1">Drag to reorder • Click to edit</p>
       </div>
 
@@ -211,6 +289,23 @@ export function SectionNavigator({ onScrollToSection }: SectionNavigatorProps) {
                           </TooltipTrigger>
                           <TooltipContent>Duplicate section</TooltipContent>
                         </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="w-6 h-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteClick(section.id);
+                              }}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete section</TooltipContent>
+                        </Tooltip>
                       </>
                     )}
                   </div>
@@ -263,6 +358,24 @@ export function SectionNavigator({ onScrollToSection }: SectionNavigatorProps) {
           })}
         </ul>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Section</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this section? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
