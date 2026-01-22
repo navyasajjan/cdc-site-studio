@@ -344,10 +344,11 @@ function HeroSection({ content, onContentUpdate, style = defaultStyle, siteSetti
                       handlePositionChange(pos);
                     }}
                     className={cn(
-                      'w-6 h-6 rounded flex items-center justify-center transition-colors',
+                      'w-6 h-6 rounded flex items-center justify-center transition-all duration-150',
+                      'active:scale-90 active:translate-y-0.5',
                       siteSettings.heroLogoPosition === pos 
                         ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                        : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:scale-105'
                     )}
                     title={pos.replace('-', ' ')}
                   >
