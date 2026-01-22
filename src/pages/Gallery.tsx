@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { galleryItems as initialItems } from '@/data/mockData';
 import { GalleryItem } from '@/types/editor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -234,6 +234,30 @@ function MediaUploadForm({ onSave, onCancel }: MediaUploadFormProps) {
     order: 1,
   });
   const [tagInput, setTagInput] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+        alert('Please select an image or video file');
+        return;
+      }
+      if (file.size > 50 * 1024 * 1024) {
+        alert('File must be less than 50MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFormData({ 
+          ...formData, 
+          url: event.target?.result as string,
+          type: file.type.startsWith('video/') ? 'video' : 'image'
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -259,21 +283,60 @@ function MediaUploadForm({ onSave, onCancel }: MediaUploadFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,video/*"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+      
       <Tabs defaultValue="upload" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="upload">Upload</TabsTrigger>
           <TabsTrigger value="url">URL</TabsTrigger>
         </TabsList>
         <TabsContent value="upload" className="pt-4">
-          <div className="border-2 border-dashed border-input rounded-lg p-8 text-center hover:bg-muted/50 transition-colors cursor-pointer">
-            <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">
-              Click to upload or drag & drop
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              PNG, JPG, GIF, MP4 (max 50MB)
-            </p>
-          </div>
+          {formData.url ? (
+            <div className="relative rounded-lg overflow-hidden">
+              {formData.type === 'video' ? (
+                <video src={formData.url} className="w-full h-32 object-cover" />
+              ) : (
+                <img src={formData.url} alt="Preview" className="w-full h-32 object-cover" />
+              )}
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Change
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setFormData({ ...formData, url: '' })}
+                >
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div 
+              className="border-2 border-dashed border-input rounded-lg p-8 text-center hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">
+                Click to upload or drag & drop
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                PNG, JPG, GIF, MP4 (max 50MB)
+              </p>
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="url" className="pt-4">
           <div className="space-y-2">

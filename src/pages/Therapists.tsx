@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { therapists as initialTherapists, services } from '@/data/mockData';
 import { Therapist } from '@/types/editor';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,6 +30,8 @@ import {
   EyeOff,
   Search,
   Upload,
+  X,
+  Link,
 } from 'lucide-react';
 
 export default function TherapistsPage() {
@@ -239,6 +241,27 @@ function TherapistForm({ therapist, onSave, onCancel }: TherapistFormProps) {
       serviceIds: [],
     }
   );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [urlInput, setUrlInput] = useState('');
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image must be less than 5MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setFormData({ ...formData, photo: event.target?.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -250,6 +273,13 @@ function TherapistForm({ therapist, onSave, onCancel }: TherapistFormProps) {
       {/* Photo Upload */}
       <div className="space-y-2">
         <Label>Photo</Label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
         <div className="flex items-center gap-4">
           <Avatar className="w-16 h-16">
             <AvatarImage src={formData.photo} />
@@ -257,9 +287,49 @@ function TherapistForm({ therapist, onSave, onCancel }: TherapistFormProps) {
               {formData.name?.split(' ').map((n) => n[0]).join('') || 'TH'}
             </AvatarFallback>
           </Avatar>
-          <Button type="button" variant="outline" size="sm" className="gap-2">
-            <Upload className="w-4 h-4" />
-            Upload Photo
+          <div className="flex flex-col gap-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              className="gap-2"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="w-4 h-4" />
+              Upload Photo
+            </Button>
+            {formData.photo && (
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                className="gap-2 text-destructive hover:text-destructive"
+                onClick={() => setFormData({ ...formData, photo: '' })}
+              >
+                <X className="w-4 h-4" />
+                Remove
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="flex gap-2 mt-2">
+          <Input
+            placeholder="Or paste image URL..."
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            className="text-xs"
+          />
+          <Button 
+            type="button"
+            size="sm" 
+            variant="outline"
+            disabled={!urlInput.trim()}
+            onClick={() => {
+              setFormData({ ...formData, photo: urlInput.trim() });
+              setUrlInput('');
+            }}
+          >
+            <Link className="w-4 h-4" />
           </Button>
         </div>
       </div>
