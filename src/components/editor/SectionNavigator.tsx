@@ -40,7 +40,11 @@ const sectionIcons: Record<SectionType, React.ElementType> = {
   footer: Layout,
 };
 
-export function SectionNavigator() {
+interface SectionNavigatorProps {
+  onScrollToSection?: (sectionId: string) => void;
+}
+
+export function SectionNavigator({ onScrollToSection }: SectionNavigatorProps) {
   const { sections, state, setSelectedSection, toggleSectionVisibility, duplicateSection, reorderSections } = useEditor();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['section-hero', 'section-services']));
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -114,7 +118,10 @@ export function SectionNavigator() {
                     isSelected ? 'bg-editor-selected' : 'hover:bg-editor-hover',
                     !section.visible && 'opacity-50'
                   )}
-                  onClick={() => setSelectedSection(section.id)}
+                  onClick={() => {
+                    setSelectedSection(section.id);
+                    onScrollToSection?.(section.id);
+                  }}
                 >
                   {/* Drag Handle */}
                   <div className={cn(

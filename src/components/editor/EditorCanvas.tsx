@@ -1,3 +1,4 @@
+import React, { useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { useEditor, SiteSettings } from '@/contexts/EditorContext';
 import { cn } from '@/lib/utils';
 import { cdcData, services, therapists, galleryItems, reviews, pricingPackages } from '@/data/mockData';
@@ -140,8 +141,26 @@ const getBackgroundClass = (style: SectionStyle, defaultClass: string = 'bg-back
   }
 };
 
-export function EditorCanvas() {
+export interface EditorCanvasRef {
+  scrollToSection: (sectionId: string) => void;
+}
+
+export const EditorCanvas = forwardRef<EditorCanvasRef>(function EditorCanvas(_, ref) {
   const { sections, state, siteSettings, setSelectedSection, updateSectionContent, updateSiteSettings } = useEditor();
+  const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToSection = useCallback((sectionId: string) => {
+    const sectionElement = sectionRefs.current.get(sectionId);
+    if (sectionElement && containerRef.current) {
+      sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    scrollToSection,
+  }), [scrollToSection]);
+
   const previewClasses = cn(
     'transition-all duration-300 bg-white mx-auto shadow-elevated rounded-lg overflow-hidden',
     state.previewMode === 'desktop' && 'w-full max-w-[1200px]',
@@ -169,6 +188,7 @@ export function EditorCanvas() {
 
   return (
     <div
+      ref={containerRef}
       className="flex-1 overflow-auto p-6 bg-editor-canvas"
       style={{ transform: `scale(${state.zoom / 100})`, transformOrigin: 'top center' }}
     >
@@ -193,6 +213,9 @@ export function EditorCanvas() {
         {visibleSections.map((section) => (
           <div
             key={section.id}
+            ref={(el) => {
+              if (el) sectionRefs.current.set(section.id, el);
+            }}
             className={cn(
               'relative group cursor-pointer transition-all duration-200',
               state.selectedSectionId === section.id && 'ring-2 ring-primary ring-offset-2'
@@ -234,7 +257,7 @@ export function EditorCanvas() {
       </div>
     </div>
   );
-}
+});
 
 function HeroSection({ content, onContentUpdate, style = defaultStyle, siteSettings, onUpdateSiteSettings }: SectionProps) {
   const logoSizeClass = cn(
