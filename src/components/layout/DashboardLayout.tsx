@@ -20,6 +20,7 @@ import {
   ChevronRight,
   LogOut,
   HelpCircle,
+  UsersRound,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -55,6 +56,7 @@ const navItems: NavItem[] = [
   { label: 'SEO & Visibility', icon: Search, href: '/seo' },
   { label: 'Preview & Publish', icon: Eye, href: '/publish' },
   { label: 'Analytics', icon: BarChart3, href: '/analytics' },
+  { label: 'Staff Management', icon: UsersRound, href: '/staff' },
   { label: 'Settings', icon: Settings, href: '/settings' },
 ];
 
