@@ -26,6 +26,8 @@ interface EditorContextType {
   reorderSections: (startIndex: number, endIndex: number) => void;
   toggleSectionVisibility: (id: string) => void;
   duplicateSection: (id: string) => void;
+  addSection: (type: SectionType) => void;
+  deleteSection: (id: string) => void;
   setHasUnsavedChanges: (value: boolean) => void;
   saveDraft: () => void;
   publish: () => void;
@@ -185,6 +187,56 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     setState(prev => ({ ...prev, hasUnsavedChanges: true }));
   }, [pushToHistory]);
 
+  const sectionDefaults: Record<SectionType, { title: string; content: Record<string, any> }> = {
+    hero: { title: 'Hero', content: { headline: 'Welcome', subheadline: 'Your tagline here', ctaText: 'Get Started' } },
+    about: { title: 'About', content: { heading: 'About Us', description: 'Tell your story here.' } },
+    services: { title: 'Services', content: { heading: 'Our Services', services: [] } },
+    therapists: { title: 'Therapists', content: { heading: 'Our Team', therapists: [] } },
+    gallery: { title: 'Gallery', content: { heading: 'Gallery', images: [] } },
+    booking: { title: 'Booking', content: { heading: 'Book a Session' } },
+    analytics: { title: 'Analytics', content: { heading: 'Our Impact' } },
+    testimonials: { title: 'Testimonials', content: { heading: 'What Parents Say', testimonials: [] } },
+    pricing: { title: 'Pricing', content: { heading: 'Pricing & Packages', packages: [] } },
+    learning: { title: 'Learning Hub', content: { heading: 'Learning Hub', resources: [] } },
+    contact: { title: 'Contact', content: { heading: 'Contact Us' } },
+    footer: { title: 'Footer', content: {} },
+  };
+
+  const addSection = useCallback((type: SectionType) => {
+    setSections(prev => {
+      const defaults = sectionDefaults[type];
+      const newSection: SiteSection = {
+        id: `section-${type}-${Date.now()}`,
+        type,
+        title: defaults.title,
+        visible: true,
+        locked: false,
+        order: prev.length + 1,
+        content: defaults.content,
+      };
+
+      const newSections = [...prev, newSection];
+      pushToHistory(newSections);
+      return newSections;
+    });
+    setState(prev => ({ ...prev, hasUnsavedChanges: true }));
+  }, [pushToHistory]);
+
+  const deleteSection = useCallback((id: string) => {
+    setSections(prev => {
+      const section = prev.find(s => s.id === id);
+      if (!section || section.locked) return prev;
+
+      const newSections = prev
+        .filter(s => s.id !== id)
+        .map((s, index) => ({ ...s, order: index + 1 }));
+
+      pushToHistory(newSections);
+      return newSections;
+    });
+    setState(prev => ({ ...prev, selectedSectionId: null, hasUnsavedChanges: true }));
+  }, [pushToHistory]);
+
   const setHasUnsavedChanges = useCallback((value: boolean) => {
     setState(prev => ({ ...prev, hasUnsavedChanges: value }));
   }, []);
@@ -232,6 +284,8 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         reorderSections,
         toggleSectionVisibility,
         duplicateSection,
+        addSection,
+        deleteSection,
         setHasUnsavedChanges,
         saveDraft,
         publish,
