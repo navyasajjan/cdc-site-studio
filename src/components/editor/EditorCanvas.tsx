@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { EditableText } from './EditableText';
+import { EditableImage } from './EditableImage';
 import {
   MessageCircle,
   Hand,
@@ -277,6 +278,10 @@ function HeroSection({ content, onContentUpdate, style = defaultStyle, siteSetti
     onUpdateSiteSettings?.({ showLogoInHero: false });
   };
 
+  const handleBackgroundImageChange = (newImage: string) => {
+    onContentUpdate({ backgroundImage: newImage });
+  };
+
   return (
     <section
       className="relative min-h-[500px] flex items-center justify-center bg-cover bg-center"
@@ -350,6 +355,21 @@ function HeroSection({ content, onContentUpdate, style = defaultStyle, siteSetti
           </div>
         </div>
       )}
+
+      {/* Background Image Editor */}
+      <div className="absolute top-4 right-4 z-20 group/bg">
+        <div className="bg-background/90 backdrop-blur-sm rounded-lg shadow-lg border border-border p-1.5 flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity">
+          <span className="text-xs font-medium text-foreground px-2 hidden group-hover/bg:inline">Background</span>
+          <EditableImage
+            src={content.backgroundImage || ''}
+            alt="Hero background"
+            onChange={handleBackgroundImageChange}
+            className="w-8 h-8 rounded"
+            showOverlay={false}
+            placeholder=""
+          />
+        </div>
+      </div>
 
       <div className={cn("container mx-auto px-6 text-white flex flex-col", textAlignClass)}>
         <EditableText
@@ -668,13 +688,14 @@ function TherapistsSection({ content, onContentUpdate, style = defaultStyle }: S
 
             return (
               <Card key={therapist.id} className="overflow-hidden group">
-                <div className="aspect-square overflow-hidden">
-                  <img
-                    src={therapist.photo}
-                    alt={therapist.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
+                <EditableImage
+                  src={therapist.photo}
+                  alt={therapist.name}
+                  onChange={(value) => handleTherapistUpdate('photo', value)}
+                  className="aspect-square"
+                  aspectRatio="square"
+                  placeholder="Add therapist photo"
+                />
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-semibold">
@@ -750,28 +771,37 @@ function GallerySection({ content, onContentUpdate, style = defaultStyle }: Sect
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {galleryItems.map((item) => (
-            <div
-              key={item.id}
-              className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer"
-            >
-              <img
-                src={item.url}
-                alt={item.alt}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              {item.type === 'video' && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                  <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
-                    <Play className="w-5 h-5 text-foreground ml-0.5" />
+          {(content.gallery || galleryItems).map((item: any, index: number) => {
+            const handleGalleryUpdate = (field: string, value: string) => {
+              const currentGallery = content.gallery || galleryItems;
+              const newGallery = [...currentGallery];
+              newGallery[index] = { ...newGallery[index], [field]: value };
+              onContentUpdate({ gallery: newGallery });
+            };
+
+            return (
+              <div
+                key={item.id}
+                className="relative rounded-xl overflow-hidden"
+              >
+                <EditableImage
+                  src={item.url}
+                  alt={item.alt}
+                  onChange={(value) => handleGalleryUpdate('url', value)}
+                  onAltChange={(value) => handleGalleryUpdate('alt', value)}
+                  className="aspect-[4/3]"
+                  placeholder="Add gallery image"
+                />
+                {item.type === 'video' && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
+                    <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+                      <Play className="w-5 h-5 text-foreground ml-0.5" />
+                    </div>
                   </div>
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                <p className="absolute bottom-3 left-3 text-white text-sm font-medium">{item.alt}</p>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
@@ -1083,14 +1113,17 @@ function LearningSection({ content, onContentUpdate, style = defaultStyle }: Sec
 
             return (
               <Card key={module.id} className="overflow-hidden group cursor-pointer">
-                <div className="aspect-video overflow-hidden relative">
-                  <img
+                <div className="relative">
+                  <EditableImage
                     src={module.thumbnail}
                     alt={module.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onChange={(value) => handleModuleUpdate('thumbnail', value)}
+                    className="aspect-video"
+                    aspectRatio="video"
+                    placeholder="Add module thumbnail"
                   />
                   {module.type === 'video' && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
                       <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
                         <Play className="w-4 h-4 text-foreground ml-0.5" />
                       </div>
