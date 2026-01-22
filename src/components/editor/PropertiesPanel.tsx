@@ -25,8 +25,11 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  X,
+  Plus,
 } from 'lucide-react';
 import { SiteSection, SectionStyle } from '@/types/editor';
+import React, { useRef } from 'react';
 
 const defaultStyle: SectionStyle = {
   paddingTop: 64,
@@ -98,8 +101,26 @@ export function PropertiesPanel() {
             {selectedSection.type === 'services' && (
               <ServicesContentEditor section={selectedSection} updateContent={updateSectionContent} />
             )}
+            {selectedSection.type === 'therapists' && (
+              <TherapistsContentEditor section={selectedSection} updateContent={updateSectionContent} />
+            )}
+            {selectedSection.type === 'gallery' && (
+              <GalleryContentEditor section={selectedSection} updateContent={updateSectionContent} />
+            )}
+            {selectedSection.type === 'testimonials' && (
+              <TestimonialsContentEditor section={selectedSection} updateContent={updateSectionContent} />
+            )}
+            {selectedSection.type === 'pricing' && (
+              <PricingContentEditor section={selectedSection} updateContent={updateSectionContent} />
+            )}
+            {selectedSection.type === 'learning' && (
+              <LearningContentEditor section={selectedSection} updateContent={updateSectionContent} />
+            )}
+            {selectedSection.type === 'contact' && (
+              <ContactContentEditor section={selectedSection} updateContent={updateSectionContent} />
+            )}
             {/* Default content editor for other sections */}
-            {!['hero', 'about', 'services'].includes(selectedSection.type) && (
+            {!['hero', 'about', 'services', 'therapists', 'gallery', 'testimonials', 'pricing', 'learning', 'contact'].includes(selectedSection.type) && (
               <DefaultContentEditor section={selectedSection} updateContent={updateSectionContent} />
             )}
           </TabsContent>
@@ -115,6 +136,114 @@ export function PropertiesPanel() {
           </TabsContent>
         </div>
       </Tabs>
+    </div>
+  );
+}
+
+function ImageUploader({ 
+  value, 
+  onChange, 
+  label = "Image",
+  recommendation = "Recommended: 1920×800px"
+}: { 
+  value: string; 
+  onChange: (url: string) => void; 
+  label?: string;
+  recommendation?: string;
+}) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [urlInput, setUrlInput] = React.useState('');
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image must be less than 5MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        onChange(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs font-medium">{label}</Label>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+      
+      {value ? (
+        <div className="relative">
+          <img
+            src={value}
+            alt="Preview"
+            className="w-full h-24 object-cover rounded-lg"
+          />
+          <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="w-3 h-3 mr-1" />
+              Change
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onChange('')}
+            >
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div 
+          className="border border-dashed border-editor-border rounded-lg p-4 text-center hover:bg-editor-hover transition-colors cursor-pointer"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+          <p className="text-xs text-muted-foreground">
+            Click to upload
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            {recommendation}
+          </p>
+        </div>
+      )}
+
+      {/* URL Input */}
+      <div className="flex gap-2">
+        <Input
+          placeholder="Or paste image URL..."
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          className="text-xs"
+        />
+        <Button 
+          size="sm" 
+          variant="outline"
+          disabled={!urlInput.trim()}
+          onClick={() => {
+            onChange(urlInput.trim());
+            setUrlInput('');
+          }}
+        >
+          Add
+        </Button>
+      </div>
     </div>
   );
 }
@@ -148,25 +277,12 @@ function HeroContentEditor({ section, updateContent }: { section: any; updateCon
       </div>
 
       {/* Background Image */}
-      <div className="space-y-2">
-        <Label className="text-xs font-medium">Background Image</Label>
-        <div className="border border-dashed border-editor-border rounded-lg p-4 text-center hover:bg-editor-hover transition-colors cursor-pointer">
-          <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-          <p className="text-xs text-muted-foreground">
-            Click to upload or drag & drop
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-1">
-            Recommended: 1920×800px
-          </p>
-        </div>
-        {section.content.backgroundImage && (
-          <img
-            src={section.content.backgroundImage}
-            alt="Background preview"
-            className="w-full h-24 object-cover rounded-lg mt-2"
-          />
-        )}
-      </div>
+      <ImageUploader
+        value={section.content.backgroundImage || ''}
+        onChange={(url) => updateContent(section.id, { backgroundImage: url })}
+        label="Background Image"
+        recommendation="Recommended: 1920×800px"
+      />
 
       {/* CTAs */}
       <div className="space-y-3">
@@ -278,6 +394,404 @@ function ServicesContentEditor({ section, updateContent }: { section: any; updat
         <Button variant="link" size="sm" className="p-0 h-auto mt-1 text-xs">
           Go to Services →
         </Button>
+      </div>
+    </div>
+  );
+}
+
+function TherapistsContentEditor({ section, updateContent }: { section: any; updateContent: (id: string, content: any) => void }) {
+  const therapists = section.content.therapists || [];
+  
+  const updateTherapist = (index: number, field: string, value: any) => {
+    const newTherapists = [...therapists];
+    newTherapists[index] = { ...newTherapists[index], [field]: value };
+    updateContent(section.id, { therapists: newTherapists });
+  };
+
+  return (
+    <div className="p-4 space-y-6">
+      <div className="space-y-2">
+        <Label className="text-xs font-medium">Section Heading</Label>
+        <Input
+          value={section.content.heading || ''}
+          onChange={(e) => updateContent(section.id, { heading: e.target.value })}
+          className="text-sm"
+          placeholder="Meet Our Therapists"
+        />
+      </div>
+
+      <div className="space-y-3">
+        <Label className="text-xs font-medium">Therapists ({therapists.length})</Label>
+        {therapists.map((therapist: any, index: number) => (
+          <div key={therapist.id || index} className="p-3 border border-editor-border rounded-lg space-y-3">
+            <ImageUploader
+              value={therapist.photo || ''}
+              onChange={(url) => updateTherapist(index, 'photo', url)}
+              label={`Photo - ${therapist.name || 'Therapist'}`}
+              recommendation="Recommended: 300×300px"
+            />
+            <Input
+              value={therapist.name || ''}
+              onChange={(e) => updateTherapist(index, 'name', e.target.value)}
+              className="text-sm"
+              placeholder="Therapist name"
+            />
+            <Input
+              value={therapist.specialization || ''}
+              onChange={(e) => updateTherapist(index, 'specialization', e.target.value)}
+              className="text-sm"
+              placeholder="Specialization"
+            />
+            <Input
+              value={therapist.experience || ''}
+              onChange={(e) => updateTherapist(index, 'experience', e.target.value)}
+              className="text-sm"
+              placeholder="Experience"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GalleryContentEditor({ section, updateContent }: { section: any; updateContent: (id: string, content: any) => void }) {
+  const items = section.content.items || [];
+  
+  const updateItem = (index: number, field: string, value: any) => {
+    const newItems = [...items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    updateContent(section.id, { items: newItems });
+  };
+
+  const addItem = () => {
+    const newItems = [...items, { id: `gallery-${Date.now()}`, url: '', alt: '', type: 'image' }];
+    updateContent(section.id, { items: newItems });
+  };
+
+  const removeItem = (index: number) => {
+    const newItems = items.filter((_: any, i: number) => i !== index);
+    updateContent(section.id, { items: newItems });
+  };
+
+  return (
+    <div className="p-4 space-y-6">
+      <div className="space-y-2">
+        <Label className="text-xs font-medium">Section Heading</Label>
+        <Input
+          value={section.content.heading || ''}
+          onChange={(e) => updateContent(section.id, { heading: e.target.value })}
+          className="text-sm"
+          placeholder="Our Gallery"
+        />
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <Label className="text-xs font-medium">Gallery Items ({items.length})</Label>
+          <Button size="sm" variant="outline" onClick={addItem}>
+            <Plus className="w-3 h-3 mr-1" />
+            Add
+          </Button>
+        </div>
+        {items.map((item: any, index: number) => (
+          <div key={item.id || index} className="p-3 border border-editor-border rounded-lg space-y-2">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-medium">Item {index + 1}</span>
+              <Button variant="ghost" size="sm" onClick={() => removeItem(index)} className="h-6 w-6 p-0 text-destructive">
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
+            <ImageUploader
+              value={item.url || ''}
+              onChange={(url) => updateItem(index, 'url', url)}
+              recommendation="Recommended: 800×600px"
+            />
+            <Input
+              value={item.alt || ''}
+              onChange={(e) => updateItem(index, 'alt', e.target.value)}
+              className="text-sm"
+              placeholder="Alt text for accessibility"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TestimonialsContentEditor({ section, updateContent }: { section: any; updateContent: (id: string, content: any) => void }) {
+  const testimonials = section.content.testimonials || [];
+  
+  const updateTestimonial = (index: number, field: string, value: any) => {
+    const newTestimonials = [...testimonials];
+    newTestimonials[index] = { ...newTestimonials[index], [field]: value };
+    updateContent(section.id, { testimonials: newTestimonials });
+  };
+
+  const addTestimonial = () => {
+    const newTestimonials = [...testimonials, { id: `testimonial-${Date.now()}`, content: '', author: '', rating: 5 }];
+    updateContent(section.id, { testimonials: newTestimonials });
+  };
+
+  const removeTestimonial = (index: number) => {
+    const newTestimonials = testimonials.filter((_: any, i: number) => i !== index);
+    updateContent(section.id, { testimonials: newTestimonials });
+  };
+
+  return (
+    <div className="p-4 space-y-6">
+      <div className="space-y-2">
+        <Label className="text-xs font-medium">Section Heading</Label>
+        <Input
+          value={section.content.heading || ''}
+          onChange={(e) => updateContent(section.id, { heading: e.target.value })}
+          className="text-sm"
+          placeholder="What Parents Say"
+        />
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <Label className="text-xs font-medium">Testimonials ({testimonials.length})</Label>
+          <Button size="sm" variant="outline" onClick={addTestimonial}>
+            <Plus className="w-3 h-3 mr-1" />
+            Add
+          </Button>
+        </div>
+        {testimonials.map((testimonial: any, index: number) => (
+          <div key={testimonial.id || index} className="p-3 border border-editor-border rounded-lg space-y-2">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-medium">Testimonial {index + 1}</span>
+              <Button variant="ghost" size="sm" onClick={() => removeTestimonial(index)} className="h-6 w-6 p-0 text-destructive">
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
+            <Textarea
+              value={testimonial.content || ''}
+              onChange={(e) => updateTestimonial(index, 'content', e.target.value)}
+              className="text-sm min-h-[60px]"
+              placeholder="Testimonial content..."
+            />
+            <Input
+              value={testimonial.author || ''}
+              onChange={(e) => updateTestimonial(index, 'author', e.target.value)}
+              className="text-sm"
+              placeholder="Author name"
+            />
+            <div className="flex items-center gap-2">
+              <Label className="text-xs">Rating:</Label>
+              <Select 
+                value={String(testimonial.rating || 5)} 
+                onValueChange={(value) => updateTestimonial(index, 'rating', parseInt(value))}
+              >
+                <SelectTrigger className="w-20 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <SelectItem key={rating} value={String(rating)}>{rating} ★</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PricingContentEditor({ section, updateContent }: { section: any; updateContent: (id: string, content: any) => void }) {
+  const packages = section.content.packages || [];
+  
+  const updatePackage = (index: number, field: string, value: any) => {
+    const newPackages = [...packages];
+    newPackages[index] = { ...newPackages[index], [field]: value };
+    updateContent(section.id, { packages: newPackages });
+  };
+
+  const addPackage = () => {
+    const newPackages = [...packages, { id: `package-${Date.now()}`, name: 'New Package', price: 0, description: '', features: [] }];
+    updateContent(section.id, { packages: newPackages });
+  };
+
+  const removePackage = (index: number) => {
+    const newPackages = packages.filter((_: any, i: number) => i !== index);
+    updateContent(section.id, { packages: newPackages });
+  };
+
+  return (
+    <div className="p-4 space-y-6">
+      <div className="space-y-2">
+        <Label className="text-xs font-medium">Section Heading</Label>
+        <Input
+          value={section.content.heading || ''}
+          onChange={(e) => updateContent(section.id, { heading: e.target.value })}
+          className="text-sm"
+          placeholder="Our Pricing"
+        />
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <Label className="text-xs font-medium">Packages ({packages.length})</Label>
+          <Button size="sm" variant="outline" onClick={addPackage}>
+            <Plus className="w-3 h-3 mr-1" />
+            Add
+          </Button>
+        </div>
+        {packages.map((pkg: any, index: number) => (
+          <div key={pkg.id || index} className="p-3 border border-editor-border rounded-lg space-y-2">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-medium">{pkg.name || `Package ${index + 1}`}</span>
+              <Button variant="ghost" size="sm" onClick={() => removePackage(index)} className="h-6 w-6 p-0 text-destructive">
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
+            <Input
+              value={pkg.name || ''}
+              onChange={(e) => updatePackage(index, 'name', e.target.value)}
+              className="text-sm"
+              placeholder="Package name"
+            />
+            <Input
+              type="number"
+              value={pkg.price || 0}
+              onChange={(e) => updatePackage(index, 'price', parseInt(e.target.value))}
+              className="text-sm"
+              placeholder="Price"
+            />
+            <Textarea
+              value={pkg.description || ''}
+              onChange={(e) => updatePackage(index, 'description', e.target.value)}
+              className="text-sm min-h-[40px]"
+              placeholder="Description..."
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LearningContentEditor({ section, updateContent }: { section: any; updateContent: (id: string, content: any) => void }) {
+  const modules = section.content.modules || [];
+  
+  const updateModule = (index: number, field: string, value: any) => {
+    const newModules = [...modules];
+    newModules[index] = { ...newModules[index], [field]: value };
+    updateContent(section.id, { modules: newModules });
+  };
+
+  const addModule = () => {
+    const newModules = [...modules, { id: `module-${Date.now()}`, title: 'New Module', thumbnail: '' }];
+    updateContent(section.id, { modules: newModules });
+  };
+
+  const removeModule = (index: number) => {
+    const newModules = modules.filter((_: any, i: number) => i !== index);
+    updateContent(section.id, { modules: newModules });
+  };
+
+  return (
+    <div className="p-4 space-y-6">
+      <div className="space-y-2">
+        <Label className="text-xs font-medium">Section Heading</Label>
+        <Input
+          value={section.content.heading || ''}
+          onChange={(e) => updateContent(section.id, { heading: e.target.value })}
+          className="text-sm"
+          placeholder="Learning Hub"
+        />
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <Label className="text-xs font-medium">Modules ({modules.length})</Label>
+          <Button size="sm" variant="outline" onClick={addModule}>
+            <Plus className="w-3 h-3 mr-1" />
+            Add
+          </Button>
+        </div>
+        {modules.map((mod: any, index: number) => (
+          <div key={mod.id || index} className="p-3 border border-editor-border rounded-lg space-y-2">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-medium">{mod.title || `Module ${index + 1}`}</span>
+              <Button variant="ghost" size="sm" onClick={() => removeModule(index)} className="h-6 w-6 p-0 text-destructive">
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
+            <ImageUploader
+              value={mod.thumbnail || ''}
+              onChange={(url) => updateModule(index, 'thumbnail', url)}
+              label="Thumbnail"
+              recommendation="Recommended: 400×225px"
+            />
+            <Input
+              value={mod.title || ''}
+              onChange={(e) => updateModule(index, 'title', e.target.value)}
+              className="text-sm"
+              placeholder="Module title"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ContactContentEditor({ section, updateContent }: { section: any; updateContent: (id: string, content: any) => void }) {
+  return (
+    <div className="p-4 space-y-6">
+      <div className="space-y-2">
+        <Label className="text-xs font-medium">Section Heading</Label>
+        <Input
+          value={section.content.heading || ''}
+          onChange={(e) => updateContent(section.id, { heading: e.target.value })}
+          className="text-sm"
+          placeholder="Contact Us"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-medium">Phone</Label>
+        <Input
+          value={section.content.phone || ''}
+          onChange={(e) => updateContent(section.id, { phone: e.target.value })}
+          className="text-sm"
+          placeholder="+1 234 567 890"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-medium">Email</Label>
+        <Input
+          value={section.content.email || ''}
+          onChange={(e) => updateContent(section.id, { email: e.target.value })}
+          className="text-sm"
+          placeholder="contact@example.com"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-medium">Address</Label>
+        <Textarea
+          value={section.content.address || ''}
+          onChange={(e) => updateContent(section.id, { address: e.target.value })}
+          className="text-sm min-h-[60px]"
+          placeholder="123 Main St, City, Country"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-medium">Working Hours</Label>
+        <Input
+          value={section.content.workingHours || ''}
+          onChange={(e) => updateContent(section.id, { workingHours: e.target.value })}
+          className="text-sm"
+          placeholder="Mon-Fri: 9am-6pm"
+        />
       </div>
     </div>
   );
