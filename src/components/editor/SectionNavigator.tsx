@@ -185,7 +185,7 @@ export function SectionNavigator({ onScrollToSection }: SectionNavigatorProps) {
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDragEnd={handleDragEnd}
                 className={cn(
-                  'rounded-lg transition-all duration-150',
+                  'rounded-lg transition-all duration-150 group',
                   isDragging && 'opacity-50',
                   isDragOver && 'border-t-2 border-primary'
                 )}
