@@ -5,15 +5,6 @@ import { currentUser } from '@/data/mockData';
 import {
   LayoutDashboard,
   Palette,
-  Briefcase,
-  Users,
-  Image,
-  Calendar,
-  Star,
-  DollarSign,
-  BookOpen,
-  Search,
-  Eye,
   BarChart3,
   Settings,
   ChevronLeft,
@@ -21,6 +12,10 @@ import {
   LogOut,
   HelpCircle,
   UsersRound,
+  Stethoscope,
+  CalendarDays,
+  HeartPulse,
+  ClipboardList,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -43,22 +38,38 @@ interface NavItem {
   badge?: string;
 }
 
-const navItems: NavItem[] = [
-  { label: 'Overview', icon: LayoutDashboard, href: '/' },
-  { label: 'Site Editor', icon: Palette, href: '/editor' },
-  { label: 'Services', icon: Briefcase, href: '/services' },
-  { label: 'Therapists', icon: Users, href: '/therapists' },
-  { label: 'Gallery & Facilities', icon: Image, href: '/gallery' },
-  { label: 'Booking Display', icon: Calendar, href: '/booking' },
-  { label: 'Reviews', icon: Star, href: '/reviews' },
-  { label: 'Pricing', icon: DollarSign, href: '/pricing' },
-  { label: 'Learning Hub', icon: BookOpen, href: '/learning' },
-  { label: 'SEO & Visibility', icon: Search, href: '/seo' },
-  { label: 'Preview & Publish', icon: Eye, href: '/publish' },
-  { label: 'Analytics', icon: BarChart3, href: '/analytics' },
-  { label: 'Staff Management', icon: UsersRound, href: '/staff' },
-  { label: 'Settings', icon: Settings, href: '/settings' },
+interface NavGroup {
+  label?: string;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
+  {
+    items: [
+      { label: 'Overview', icon: LayoutDashboard, href: '/' },
+      { label: 'Site Editor', icon: Palette, href: '/editor' },
+    ],
+  },
+  {
+    label: 'Clinic',
+    items: [
+      { label: 'Therapist Dashboard', icon: Stethoscope, href: '/therapist-dashboard' },
+      { label: 'Appointments', icon: CalendarDays, href: '/appointments' },
+      { label: 'Patients', icon: HeartPulse, href: '/patients' },
+      { label: 'Patient Logs', icon: ClipboardList, href: '/patient-logs' },
+    ],
+  },
+  {
+    label: 'Administration',
+    items: [
+      { label: 'Analytics', icon: BarChart3, href: '/analytics' },
+      { label: 'Staff Management', icon: UsersRound, href: '/staff' },
+      { label: 'Settings', icon: Settings, href: '/settings' },
+    ],
+  },
 ];
+
+const allNavItems: NavItem[] = navGroups.flatMap(g => g.items);
 
 interface DashboardLayoutProps {
   children: ReactNode;
