@@ -125,47 +125,58 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3">
-          <ul className="space-y-1">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.href;
-              const Icon = item.icon;
-
-              return (
-                <li key={item.href}>
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <Link
-                        to={item.href}
-                        className={cn(
-                          'nav-item',
-                          isActive && 'nav-item-active',
-                          collapsed && 'justify-center px-2'
-                        )}
-                      >
-                        <Icon className="w-5 h-5 flex-shrink-0" />
-                        {!collapsed && (
-                          <>
-                            <span className="flex-1 truncate">{item.label}</span>
-                            {item.badge && (
-                              <Badge variant="secondary" className="text-xs">
-                                {item.badge}
-                              </Badge>
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-4">
+          {navGroups.map((group, gi) => (
+            <div key={gi}>
+              {!collapsed && group.label && (
+                <p className="px-3 mb-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  {group.label}
+                </p>
+              )}
+              {collapsed && group.label && gi > 0 && (
+                <div className="my-2 mx-2 border-t border-sidebar-border" />
+              )}
+              <ul className="space-y-1">
+                {group.items.map((item) => {
+                  const isActive = location.pathname === item.href;
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.href}>
+                      <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <Link
+                            to={item.href}
+                            className={cn(
+                              'nav-item',
+                              isActive && 'nav-item-active',
+                              collapsed && 'justify-center px-2'
                             )}
-                          </>
+                          >
+                            <Icon className="w-5 h-5 flex-shrink-0" />
+                            {!collapsed && (
+                              <>
+                                <span className="flex-1 truncate">{item.label}</span>
+                                {item.badge && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {item.badge}
+                                  </Badge>
+                                )}
+                              </>
+                            )}
+                          </Link>
+                        </TooltipTrigger>
+                        {collapsed && (
+                          <TooltipContent side="right" className="font-medium">
+                            {item.label}
+                          </TooltipContent>
                         )}
-                      </Link>
-                    </TooltipTrigger>
-                    {collapsed && (
-                      <TooltipContent side="right" className="font-medium">
-                        {item.label}
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </li>
-              );
-            })}
-          </ul>
+                      </Tooltip>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
         {/* Collapse Toggle */}
@@ -241,7 +252,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6">
           <div className="flex items-center gap-4">
             <h2 className="text-lg font-semibold text-foreground">
-              {navItems.find(item => item.href === location.pathname)?.label || 'Dashboard'}
+              {allNavItems.find(item => item.href === location.pathname)?.label || 'Dashboard'}
             </h2>
           </div>
 
